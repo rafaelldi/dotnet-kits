@@ -21,6 +21,7 @@
 
     <actions>
         <action id="Dotnet.Warehouse.Receive"
-                class="me.rafaelldi.dotnet.warehouse.actions.DownloadDotnetReleaseAction"/>
+                class="me.rafaelldi.dotnet.warehouse.actions.DownloadDotnetReleaseAction"
+                icon="AllIcons.Actions.Download"/>
     </actions>
 </idea-plugin>
