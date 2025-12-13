@@ -11,9 +11,10 @@ import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoType
 import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoVersion
 import me.rafaelldi.dotnet.warehouse.receivingHub.ReceivingHub
 
-class ReceiveDotnetCargoAction : AnAction() {
+class DownloadDotnetReleaseAction : AnAction() {
     override fun actionPerformed(actionEvent: AnActionEvent) {
-        val service = ReceivingHub.getInstance()
+        val project = actionEvent.project ?: return
+        val service = ReceivingHub.getInstance(project)
         currentThreadCoroutineScope().launch {
             service.receiveInboundCargo(
                 InboundCargoModel(
@@ -23,6 +24,11 @@ class ReceiveDotnetCargoAction : AnAction() {
                 )
             )
         }
+    }
+
+    override fun update(actionEvent: AnActionEvent) {
+        val project = actionEvent.project
+        actionEvent.presentation.isEnabledAndVisible = project != null
     }
 
     override fun getActionUpdateThread() = ActionUpdateThread.BGT

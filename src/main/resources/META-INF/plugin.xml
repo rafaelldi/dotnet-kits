@@ -21,6 +21,6 @@
 
     <actions>
         <action id="Dotnet.Warehouse.Receive"
-                class="me.rafaelldi.dotnet.warehouse.actions.ReceiveDotnetCargoAction"/>
+                class="me.rafaelldi.dotnet.warehouse.actions.DownloadDotnetReleaseAction"/>
     </actions>
 </idea-plugin>

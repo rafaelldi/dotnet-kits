@@ -1,21 +1,32 @@
+@file:Suppress("UnstableApiUsage")
+
 package me.rafaelldi.dotnet.warehouse.receivingHub
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.diagnostic.trace
+import com.intellij.openapi.project.Project
+import com.intellij.platform.eel.fs.createTemporaryFile
+import com.intellij.platform.eel.getOrNull
+import com.intellij.platform.eel.provider.asNioPath
+import com.intellij.platform.eel.provider.getEelDescriptor
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.streams.*
 import kotlinx.serialization.json.Json
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.outputStream
 
-@Service
-internal class ReceivingHub {
+@Service(Service.Level.PROJECT)
+internal class ReceivingHub(private val project: Project) {
     companion object {
-        fun getInstance(): ReceivingHub = service()
+        fun getInstance(project: Project): ReceivingHub = project.service()
 
         private const val DOTNET_FEED_URL =
             "https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json"
@@ -105,6 +116,26 @@ internal class ReceivingHub {
     }
 
     private suspend fun downloadFile(dotnetReleaseFile: DotnetReleaseFile) {
+        val eelApi = project.getEelDescriptor().toEelApi()
+        val tempFile = eelApi.fs.createTemporaryFile()
+            .prefix("dotnet-warehouse")
+            .eelIt()
+            .getOrNull()
+            ?.asNioPath()
+        if (tempFile == null) {
+            LOG.warn("Failed to create temporary file")
+            return
+        }
 
+        LOG.trace { "Temporary file for the release download: ${tempFile.absolutePathString()}" }
+
+        val tempFileWriteChannel = tempFile
+            .outputStream()
+            .asByteWriteChannel()
+
+        client.prepareGet(dotnetReleaseFile.url).execute { httpResponse ->
+            val channel: ByteReadChannel = httpResponse.body()
+            channel.copyAndClose(tempFileWriteChannel)
+        }
     }
 }
