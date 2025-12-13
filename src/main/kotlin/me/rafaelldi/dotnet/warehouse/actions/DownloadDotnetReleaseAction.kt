@@ -9,20 +9,31 @@ import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoModel
 import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoRid
 import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoType
 import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoVersion
+import me.rafaelldi.dotnet.warehouse.receivingHub.ReceiveInboundCargoDialog
 import me.rafaelldi.dotnet.warehouse.receivingHub.ReceivingHub
 
 class DownloadDotnetReleaseAction : AnAction() {
     override fun actionPerformed(actionEvent: AnActionEvent) {
         val project = actionEvent.project ?: return
-        val service = ReceivingHub.getInstance(project)
-        currentThreadCoroutineScope().launch {
-            service.receiveInboundCargo(
-                InboundCargoModel(
-                    InboundCargoVersion.Version10,
-                    InboundCargoType.Sdk,
-                    InboundCargoRid.LinuxX64
+
+        val version = InboundCargoVersion.Version10
+        val type = InboundCargoType.Sdk
+        val rid = InboundCargoRid.LinuxX64
+
+        val dialog = ReceiveInboundCargoDialog(project, version, type, rid)
+        if (dialog.showAndGet()) {
+            val model = dialog.getModel()
+
+            val service = ReceivingHub.getInstance(project)
+            currentThreadCoroutineScope().launch {
+                service.receiveInboundCargo(
+                    InboundCargoModel(
+                        model.version,
+                        model.type,
+                        model.rid
+                    )
                 )
-            )
+            }
         }
     }
 

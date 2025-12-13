@@ -6,7 +6,7 @@ internal data class InboundCargoModel(
     val rid: InboundCargoRid
 )
 
-internal enum class InboundCargoVersion(val channelVersion: String) {
+internal enum class InboundCargoVersion(val version: String) {
     Version10("10.0"),
     Version9("9.0"),
     Version8("8.0"),
@@ -15,13 +15,13 @@ internal enum class InboundCargoVersion(val channelVersion: String) {
     Version5("5.0")
 }
 
-internal enum class InboundCargoType(val fileNamePrefix: String) {
+internal enum class InboundCargoType(val id: String) {
     Sdk("dotnet-sdk"),
     Runtime("dotnet-runtime"),
     AspNetRuntime("aspnetcore-runtime")
 }
 
-internal enum class InboundCargoRid(val fileNameSuffix: String, val fileExtension: String) {
+internal enum class InboundCargoRid(val id: String, val fileExtension: String) {
     LinuxX64("linux-x64", ".tar.gz"),
     LinuxArm64("linux-arm64", ".tar.gz"),
     WinX64("win-x64", ".zip"),

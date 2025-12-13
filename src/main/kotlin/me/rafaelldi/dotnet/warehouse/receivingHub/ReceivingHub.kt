@@ -49,7 +49,7 @@ internal class ReceivingHub(private val project: Project) {
             return
         }
 
-        val releaseVersion = index.versions.firstOrNull { it.channelVersion == model.version.channelVersion }
+        val releaseVersion = index.versions.firstOrNull { it.channelVersion == model.version.version }
         if (releaseVersion == null) {
             LOG.warn("Failed to find release index for version: ${model.version}")
             return
@@ -73,9 +73,9 @@ internal class ReceivingHub(private val project: Project) {
             InboundCargoType.AspNetRuntime -> latestRelease.aspNetCoreRuntime.files
         }
         val fileNameToDownload = buildString {
-            append(model.type.fileNamePrefix)
+            append(model.type.id)
             append("-")
-            append(model.rid.fileNameSuffix)
+            append(model.rid.id)
             append(model.rid.fileExtension)
         }
         LOG.trace { "File to download: $fileNameToDownload" }
