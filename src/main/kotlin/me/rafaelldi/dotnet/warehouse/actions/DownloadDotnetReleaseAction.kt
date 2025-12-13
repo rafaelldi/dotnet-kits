@@ -1,16 +1,17 @@
 package me.rafaelldi.dotnet.warehouse.actions
 
+import com.intellij.ide.actions.RevealFileAction
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationAction
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.progress.currentThreadCoroutineScope
+import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.launch
-import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoModel
-import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoRid
-import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoType
-import me.rafaelldi.dotnet.warehouse.receivingHub.InboundCargoVersion
-import me.rafaelldi.dotnet.warehouse.receivingHub.ReceiveInboundCargoDialog
-import me.rafaelldi.dotnet.warehouse.receivingHub.ReceivingHub
+import me.rafaelldi.dotnet.warehouse.WarehouseBundle
+import me.rafaelldi.dotnet.warehouse.receivingHub.*
 
 class DownloadDotnetReleaseAction : AnAction() {
     override fun actionPerformed(actionEvent: AnActionEvent) {
@@ -26,13 +27,36 @@ class DownloadDotnetReleaseAction : AnAction() {
 
             val service = ReceivingHub.getInstance(project)
             currentThreadCoroutineScope().launch {
-                service.receiveInboundCargo(
-                    InboundCargoModel(
-                        model.version,
-                        model.type,
-                        model.rid
+                val releaseFolder =
+                    withBackgroundProgress(project, WarehouseBundle.message("progress.download.dotnet")) {
+                        service.receiveInboundCargo(
+                            InboundCargoModel(model.version, model.type, model.rid)
+                        )
+                    }
+
+                if (releaseFolder != null) {
+                    Notification(
+                        "Dotnet Warehouse",
+                        WarehouseBundle.message("notification.download.dotnet.succeeded"),
+                        "",
+                        NotificationType.INFORMATION
                     )
-                )
+                        .addAction(object :
+                            NotificationAction(WarehouseBundle.message("notification.download.dotnet.succeeded.action")) {
+                            override fun actionPerformed(e: AnActionEvent, notification: Notification) {
+                                RevealFileAction.openFile(releaseFolder)
+                            }
+                        })
+                        .notify(project)
+                } else {
+                    Notification(
+                        "Dotnet Warehouse",
+                        WarehouseBundle.message("notification.download.dotnet.failed"),
+                        "",
+                        NotificationType.ERROR
+                    )
+                        .notify(project)
+                }
             }
         }
     }
