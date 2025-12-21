@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.warehouse.toolWindow
+package me.rafaelldi.dotnet.kits.core.toolWindow
 
 import com.intellij.openapi.Disposable
 import kotlinx.coroutines.CoroutineScope
@@ -6,8 +6,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import me.rafaelldi.dotnet.warehouse.forklift.DotnetForkliftApi
-import me.rafaelldi.dotnet.warehouse.forklift.DotnetSdk
+import me.rafaelldi.dotnet.kits.core.forklift.DotnetForkliftApi
+import me.rafaelldi.dotnet.kits.core.forklift.DotnetSdk
 
 internal interface DotnetRackViewModelApi : Disposable {
     val dotnetSdkFlow: StateFlow<List<DotnetSdk>>

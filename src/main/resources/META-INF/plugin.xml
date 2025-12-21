@@ -8,20 +8,7 @@
         <module name="dotnet.kits.core" loading="required"/>
     </content>
 
-    <resource-bundle>messages.WarehouseBundle</resource-bundle>
-
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="me.rafaelldi.dotnet.warehouse.toolWindow.WarehouseToolWindowFactory"
-                    id="Warehouse"
-                    icon="me.rafaelldi.dotnet.warehouse.WarehouseIcons.WarehouseWindow"
-                    anchor="right"
-                    doNotActivateOnStart="true"/>
         <notificationGroup id="Dotnet Warehouse" displayType="BALLOON" isLogByDefault="true"/>
     </extensions>
-
-    <actions>
-        <action id="Dotnet.Warehouse.Receive"
-                class="me.rafaelldi.dotnet.warehouse.actions.DownloadDotnetReleaseAction"
-                icon="AllIcons.Actions.Download"/>
-    </actions>
 </idea-plugin>

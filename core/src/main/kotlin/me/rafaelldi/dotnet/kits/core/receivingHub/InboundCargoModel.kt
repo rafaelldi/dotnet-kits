@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.warehouse.receivingHub
+package me.rafaelldi.dotnet.kits.core.receivingHub
 
 internal data class InboundCargoModel(
     val version: InboundCargoVersion,

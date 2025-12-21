@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package me.rafaelldi.dotnet.warehouse.forklift
+package me.rafaelldi.dotnet.kits.core.forklift
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service

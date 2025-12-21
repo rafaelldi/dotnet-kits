@@ -1,10 +1,10 @@
-package me.rafaelldi.dotnet.warehouse
+package me.rafaelldi.dotnet.kits.core
 
 import com.intellij.ui.IconManager
 
 @Suppress("unused")
-object WarehouseIcons {
+object DotnetKitsCoreIcons {
     @JvmField
-    val WarehouseWindow =
+    val Dotnet =
         IconManager.getInstance().getIcon("/icons/dotnet.svg", javaClass.getClassLoader())
 }

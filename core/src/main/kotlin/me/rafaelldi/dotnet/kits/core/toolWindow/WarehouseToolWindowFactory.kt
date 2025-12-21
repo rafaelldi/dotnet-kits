@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.warehouse.toolWindow
+package me.rafaelldi.dotnet.kits.core.toolWindow
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
@@ -6,8 +6,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
-import me.rafaelldi.dotnet.warehouse.WarehouseService
-import me.rafaelldi.dotnet.warehouse.forklift.DotnetForklift
+import me.rafaelldi.dotnet.kits.core.WarehouseService
+import me.rafaelldi.dotnet.kits.core.forklift.DotnetForklift
 import org.jetbrains.jewel.bridge.addComposeTab
 
 

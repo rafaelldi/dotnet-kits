@@ -6,10 +6,8 @@ import org.jetbrains.intellij.platform.gradle.extensions.excludeCoroutines
 
 plugins {
     alias(libs.plugins.kotlin)
-    alias(libs.plugins.serialization)
     alias(libs.plugins.intelliJPlatform)
     alias(libs.plugins.changelog)
-    alias(libs.plugins.composeCompiler)
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -17,14 +15,6 @@ version = providers.gradleProperty("pluginVersion").get()
 
 kotlin {
     jvmToolchain(21)
-
-    compilerOptions {
-        freeCompilerArgs.addAll(
-            listOf(
-                "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi"
-            )
-        )
-    }
 }
 
 repositories {
@@ -43,21 +33,7 @@ dependencies {
 
         pluginModule(implementation(project(":core")))
 
-        @Suppress("UnstableApiUsage")
-        composeUI()
-
         testFramework(TestFrameworkType.Platform)
-    }
-
-    implementation(libs.serializationJson)
-    implementation(libs.ktorCio) {
-        excludeCoroutines()
-    }
-    implementation(libs.ktorContentNegotiation) {
-        excludeCoroutines()
-    }
-    implementation(libs.ktorJson) {
-        excludeCoroutines()
     }
 
     testImplementation(libs.junit)

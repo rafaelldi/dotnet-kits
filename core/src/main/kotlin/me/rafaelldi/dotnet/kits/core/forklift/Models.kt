@@ -1,9 +1,9 @@
-package me.rafaelldi.dotnet.warehouse.forklift
+package me.rafaelldi.dotnet.kits.core.forklift
 
+import me.rafaelldi.dotnet.kits.core.util.extractPreRelease
+import me.rafaelldi.dotnet.kits.core.util.parseSemanticVersion
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
-import me.rafaelldi.dotnet.warehouse.util.parseSemanticVersion
-import me.rafaelldi.dotnet.warehouse.util.extractPreRelease
 
 internal interface DotnetCargo {
     val version: String

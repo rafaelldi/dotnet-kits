@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package me.rafaelldi.dotnet.warehouse.receivingHub
+package me.rafaelldi.dotnet.kits.core.receivingHub
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service

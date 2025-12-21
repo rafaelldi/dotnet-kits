@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.warehouse
+package me.rafaelldi.dotnet.kits.core
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.Service.Level

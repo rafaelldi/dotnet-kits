@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.warehouse.util
+package me.rafaelldi.dotnet.kits.core.util
 
 /**
  * Utilities for working with semantic versions.

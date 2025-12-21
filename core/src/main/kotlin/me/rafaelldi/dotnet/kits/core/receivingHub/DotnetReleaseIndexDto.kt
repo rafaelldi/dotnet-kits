@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.warehouse.receivingHub
+package me.rafaelldi.dotnet.kits.core.receivingHub
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

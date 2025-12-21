@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalJewelApi::class, ExperimentalComposeUiApi::class)
 
-package me.rafaelldi.dotnet.warehouse.toolWindow
+package me.rafaelldi.dotnet.kits.core.toolWindow
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,9 +24,9 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.PopupPositionProvider
-import me.rafaelldi.dotnet.warehouse.WarehouseBundle
-import me.rafaelldi.dotnet.warehouse.forklift.DotnetCargo
-import me.rafaelldi.dotnet.warehouse.forklift.DotnetSdk
+import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
+import me.rafaelldi.dotnet.kits.core.forklift.DotnetCargo
+import me.rafaelldi.dotnet.kits.core.forklift.DotnetSdk
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.ActionButton
@@ -219,7 +219,7 @@ private fun DotnetSdkPallet(
             }
         ) {
             ContextPopupMenuItem(
-                WarehouseBundle.message("local.sdk.bubble.context.menu.delete.option"),
+                DotnetKitsCoreBundle.message("local.sdk.bubble.context.menu.delete.option"),
                 AllIconsKeys.General.Delete
             ) {
                 showPopup.value = false
