@@ -36,7 +36,7 @@ class DownloadDotnetReleaseAction : AnAction() {
 
                 if (releaseFolder != null) {
                     Notification(
-                        "Dotnet Warehouse",
+                        "Dotnet Kits",
                         DotnetKitsCoreBundle.message("notification.download.dotnet.succeeded"),
                         "",
                         NotificationType.INFORMATION
@@ -50,7 +50,7 @@ class DownloadDotnetReleaseAction : AnAction() {
                         .notify(project)
                 } else {
                     Notification(
-                        "Dotnet Warehouse",
+                        "Dotnet Kits",
                         DotnetKitsCoreBundle.message("notification.download.dotnet.failed"),
                         "",
                         NotificationType.ERROR

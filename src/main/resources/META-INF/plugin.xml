@@ -9,6 +9,6 @@
     </content>
 
     <extensions defaultExtensionNs="com.intellij">
-        <notificationGroup id="Dotnet Warehouse" displayType="BALLOON" isLogByDefault="true"/>
+        <notificationGroup id="Dotnet Kits" displayType="BALLOON" isLogByDefault="true"/>
     </extensions>
 </idea-plugin>

@@ -12,7 +12,7 @@ skikoAwtRuntimeAll = "0.9.22"
 
 # plugins
 changelog = "2.4.0"
-intelliJPlatform = "2.10.4"
+intelliJPlatform = "2.10.5"
 kotlin = "2.2.20"
 
 [libraries]

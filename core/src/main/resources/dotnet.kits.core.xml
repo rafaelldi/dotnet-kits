@@ -6,15 +6,15 @@
     </dependencies>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="me.rafaelldi.dotnet.kits.core.toolWindow.WarehouseToolWindowFactory"
-                    id="Warehouse"
+        <toolWindow factoryClass="me.rafaelldi.dotnet.kits.core.toolWindow.DotnetKitsToolWindowFactory"
+                    id="Dotnet Kits"
                     icon="me.rafaelldi.dotnet.kits.core.DotnetKitsCoreIcons.Dotnet"
                     anchor="right"
                     doNotActivateOnStart="true"/>
     </extensions>
 
     <actions>
-        <action id="Dotnet.Warehouse.Receive"
+        <action id="Dotnet.Kits.Receive"
                 class="me.rafaelldi.dotnet.kits.core.actions.DownloadDotnetReleaseAction"
                 icon="AllIcons.Actions.Download"/>
     </actions>

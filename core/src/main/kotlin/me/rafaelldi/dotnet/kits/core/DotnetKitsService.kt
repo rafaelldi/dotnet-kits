@@ -8,9 +8,9 @@ import com.intellij.platform.util.coroutines.childScope
 import kotlinx.coroutines.CoroutineScope
 
 @Service(Level.PROJECT)
-internal class WarehouseService(private val scope: CoroutineScope) {
+internal class DotnetKitsService(private val scope: CoroutineScope) {
     companion object {
-        fun getInstance(project: Project): WarehouseService = project.service()
+        fun getInstance(project: Project): DotnetKitsService = project.service()
     }
 
     @Suppress("UnstableApiUsage")
