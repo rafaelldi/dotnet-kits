@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package me.rafaelldi.dotnet.kits.core.receivingHub
+package me.rafaelldi.dotnet.kits.core.dotnetDownload
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -25,14 +25,14 @@ import java.nio.file.Path
 import kotlin.io.path.outputStream
 
 @Service(Service.Level.PROJECT)
-internal class ReceivingHub(private val project: Project) {
+internal class DotnetDownloadService(private val project: Project) {
     companion object {
-        fun getInstance(project: Project): ReceivingHub = project.service()
+        fun getInstance(project: Project): DotnetDownloadService = project.service()
 
         private const val DOTNET_FEED_URL =
             "https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json"
 
-        private val LOG = logger<ReceivingHub>()
+        private val LOG = logger<DotnetDownloadService>()
     }
 
     private val client = HttpClient(CIO) {
@@ -43,7 +43,7 @@ internal class ReceivingHub(private val project: Project) {
         }
     }
 
-    suspend fun receiveInboundCargo(model: InboundCargoModel): Path? {
+    suspend fun download(model: DotnetDownloadModel): Path? {
         val index = receiveDotnetReleaseIndex()
         if (index == null) {
             LOG.warn("Failed to receive dotnet release index")
@@ -69,9 +69,9 @@ internal class ReceivingHub(private val project: Project) {
         }
 
         val filesToDownload = when (model.type) {
-            InboundCargoType.Sdk -> latestRelease.sdk.files
-            InboundCargoType.Runtime -> latestRelease.runtime.files
-            InboundCargoType.AspNetRuntime -> latestRelease.aspNetCoreRuntime.files
+            DotnetDownloadType.Sdk -> latestRelease.sdk.files
+            DotnetDownloadType.Runtime -> latestRelease.runtime.files
+            DotnetDownloadType.AspNetRuntime -> latestRelease.aspNetCoreRuntime.files
         }
         val fileNameToDownload = buildString {
             append(model.type.id)
@@ -161,7 +161,7 @@ internal class ReceivingHub(private val project: Project) {
 
     private suspend fun unpackReleaseArchive(
         releaseArchive: EelPath,
-        type: InboundCargoType,
+        type: DotnetDownloadType,
         releaseVersion: String
     ): EelPath? {
         try {
@@ -169,9 +169,9 @@ internal class ReceivingHub(private val project: Project) {
 
             val userHome = eelApi.userInfo.home.resolve(".warehouse")
             val releaseTypePath = when (type) {
-                InboundCargoType.Sdk -> userHome.resolve("sdk")
-                InboundCargoType.Runtime -> userHome.resolve("runtime")
-                InboundCargoType.AspNetRuntime -> userHome.resolve("aspnetcore")
+                DotnetDownloadType.Sdk -> userHome.resolve("sdk")
+                DotnetDownloadType.Runtime -> userHome.resolve("runtime")
+                DotnetDownloadType.AspNetRuntime -> userHome.resolve("aspnetcore")
             }
             val targetPath = releaseTypePath.resolve(releaseVersion)
 

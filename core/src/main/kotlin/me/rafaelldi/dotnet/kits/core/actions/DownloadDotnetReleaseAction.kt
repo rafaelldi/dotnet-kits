@@ -11,26 +11,31 @@ import com.intellij.openapi.progress.currentThreadCoroutineScope
 import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.launch
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
-import me.rafaelldi.dotnet.kits.core.receivingHub.*
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadDialog
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadModel
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadRid
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadService
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadType
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadVersion
 
 class DownloadDotnetReleaseAction : AnAction() {
     override fun actionPerformed(actionEvent: AnActionEvent) {
         val project = actionEvent.project ?: return
 
-        val version = InboundCargoVersion.Version10
-        val type = InboundCargoType.Sdk
-        val rid = InboundCargoRid.LinuxX64
+        val version = DotnetDownloadVersion.Version10
+        val type = DotnetDownloadType.Sdk
+        val rid = DotnetDownloadRid.LinuxX64
 
-        val dialog = ReceiveInboundCargoDialog(project, version, type, rid)
+        val dialog = DotnetDownloadDialog(project, version, type, rid)
         if (dialog.showAndGet()) {
             val model = dialog.getModel()
 
-            val service = ReceivingHub.getInstance(project)
+            val service = DotnetDownloadService.getInstance(project)
             currentThreadCoroutineScope().launch {
                 val releaseFolder =
                     withBackgroundProgress(project, DotnetKitsCoreBundle.message("progress.download.dotnet")) {
-                        service.receiveInboundCargo(
-                            InboundCargoModel(model.version, model.type, model.rid)
+                        service.download(
+                            DotnetDownloadModel(model.version, model.type, model.rid)
                         )
                     }
 

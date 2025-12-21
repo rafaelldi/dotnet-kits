@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.kits.core.receivingHub
+package me.rafaelldi.dotnet.kits.core.dotnetDownload
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
@@ -8,14 +8,14 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.builder.toNullableProperty
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
 
-internal class ReceiveInboundCargoDialog(
+internal class DotnetDownloadDialog(
     project: Project,
-    version: InboundCargoVersion,
-    type: InboundCargoType,
-    rid: InboundCargoRid
+    version: DotnetDownloadVersion,
+    type: DotnetDownloadType,
+    rid: DotnetDownloadRid
 ) : DialogWrapper(project) {
 
-    private val model = ReceiveInboundCargoModel(version, type, rid)
+    private val model = DotnetDownloadDialogModel(version, type, rid)
 
     init {
         init()
@@ -25,15 +25,15 @@ internal class ReceiveInboundCargoDialog(
 
     override fun createCenterPanel() = panel {
         row(DotnetKitsCoreBundle.message("dialog.download.dotnet.version")) {
-            comboBox(InboundCargoVersion.entries.toList(), SimpleListCellRenderer.create("") { it.version })
+            comboBox(DotnetDownloadVersion.entries.toList(), SimpleListCellRenderer.create("") { it.version })
                 .bindItem(model::version.toNullableProperty())
         }
         row(DotnetKitsCoreBundle.message("dialog.download.dotnet.type")) {
-            comboBox(InboundCargoType.entries.toList(), SimpleListCellRenderer.create("") { it.id })
+            comboBox(DotnetDownloadType.entries.toList(), SimpleListCellRenderer.create("") { it.id })
                 .bindItem(model::type.toNullableProperty())
         }
         row(DotnetKitsCoreBundle.message("dialog.download.dotnet.rid")) {
-            comboBox(InboundCargoRid.entries.toList(), SimpleListCellRenderer.create("") { it.id })
+            comboBox(DotnetDownloadRid.entries.toList(), SimpleListCellRenderer.create("") { it.id })
                 .bindItem(model::rid.toNullableProperty())
         }
     }
@@ -41,8 +41,8 @@ internal class ReceiveInboundCargoDialog(
     fun getModel() = model
 }
 
-internal data class ReceiveInboundCargoModel(
-    var version: InboundCargoVersion,
-    var type: InboundCargoType,
-    var rid: InboundCargoRid
+internal data class DotnetDownloadDialogModel(
+    var version: DotnetDownloadVersion,
+    var type: DotnetDownloadType,
+    var rid: DotnetDownloadRid
 )
