@@ -1,5 +1,5 @@
-# dotnet-warehouse-plugin
+# dotnet kits
 
 <!-- Plugin description -->
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+Experimental plugin to support C# development.
 <!-- Plugin description end -->
