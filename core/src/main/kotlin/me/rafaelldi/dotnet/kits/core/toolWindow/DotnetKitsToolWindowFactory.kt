@@ -15,14 +15,14 @@ internal class DotnetKitsToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun shouldBeAvailable(project: Project) = true
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val viewModel = DotnetRackViewModel(
-            project.service<DotnetKitsService>().createScope(::DotnetRackViewModel.name),
+        val viewModel = DotnetKitsViewModel(
+            project.service<DotnetKitsService>().createScope(::DotnetKitsViewModel.name),
             DotnetManagementService.getInstance(project)
         )
         Disposer.register(toolWindow.disposable, viewModel)
 
         toolWindow.addComposeTab("SDKs", focusOnClickInside = true) {
-            DotnetSdkRack(viewModel)
+            DotnetSdkList(viewModel)
         }
     }
 }

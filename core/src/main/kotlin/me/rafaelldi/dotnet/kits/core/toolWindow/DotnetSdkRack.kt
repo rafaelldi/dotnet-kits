@@ -37,8 +37,8 @@ import org.jetbrains.jewel.ui.icons.AllIconsKeys
 import org.jetbrains.jewel.ui.theme.colorPalette
 
 @Composable
-internal fun DotnetSdkRack(viewModel: DotnetRackViewModelApi) {
-    val localSdks by viewModel.dotnetSdkFlow.collectAsState(emptyList())
+internal fun DotnetSdkList(viewModel: DotnetKitsViewModelApi) {
+    val dotnetSdks by viewModel.dotnetSdkFlow.collectAsState(emptyList())
 
     val listState = rememberLazyListState()
 
@@ -50,8 +50,8 @@ internal fun DotnetSdkRack(viewModel: DotnetRackViewModelApi) {
         Modifier
             .fillMaxWidth()
     ) {
-        DotnetSdkShelf(
-            localSdks,
+        DotnetSdkColumn(
+            dotnetSdks,
             listState,
             viewModel,
             Modifier
@@ -61,10 +61,10 @@ internal fun DotnetSdkRack(viewModel: DotnetRackViewModelApi) {
 }
 
 @Composable
-private fun DotnetSdkShelf(
+private fun DotnetSdkColumn(
     dotnetSdks: List<DotnetSdk>,
     listState: LazyListState,
-    viewModel: DotnetRackViewModelApi,
+    viewModel: DotnetKitsViewModelApi,
     modifier: Modifier
 ) {
     Box(modifier = modifier) {
@@ -84,7 +84,7 @@ private fun DotnetSdkShelf(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     items(dotnetSdks, key = { it.pathString }) { localSdk ->
-                        DotnetSdkPallet(
+                        DotnetSdkItem(
                             localSdk,
                             viewModel,
                             Modifier.fillMaxWidth()
@@ -116,9 +116,9 @@ private fun EmptySdkListPlaceholder(
 }
 
 @Composable
-private fun DotnetSdkPallet(
+private fun DotnetSdkItem(
     dotnetSdk: DotnetSdk,
-    viewModel: DotnetRackViewModelApi,
+    viewModel: DotnetKitsViewModelApi,
     modifier: Modifier = Modifier
 ) {
     val localSdkShape = RoundedCornerShape(
@@ -166,7 +166,7 @@ private fun DotnetSdkPallet(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                DotnetCargoVersion(dotnetSdk)
+                DotnetArtifactVersion(dotnetSdk)
 
                 ActionButton(
                     modifier = Modifier
@@ -194,7 +194,7 @@ private fun DotnetSdkPallet(
                     )
                 }
             }
-            DotnetCargoPath(dotnetSdk)
+            DotnetArtifactPath(dotnetSdk)
         }
     }
 
@@ -230,7 +230,7 @@ private fun DotnetSdkPallet(
 }
 
 @Composable
-private fun DotnetCargoVersion(dotnetArtifact: DotnetArtifact) {
+private fun DotnetArtifactVersion(dotnetArtifact: DotnetArtifact) {
     Text(
         text = dotnetArtifact.version,
         style = JewelTheme.defaultTextStyle.copy(
@@ -244,7 +244,7 @@ private fun DotnetCargoVersion(dotnetArtifact: DotnetArtifact) {
 }
 
 @Composable
-private fun DotnetCargoPath(dotnetArtifact: DotnetArtifact) {
+private fun DotnetArtifactPath(dotnetArtifact: DotnetArtifact) {
     Text(
         text = dotnetArtifact.pathString,
         style = JewelTheme.defaultTextStyle.copy(

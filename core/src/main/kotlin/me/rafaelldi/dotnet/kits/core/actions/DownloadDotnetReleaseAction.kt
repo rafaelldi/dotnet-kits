@@ -18,7 +18,7 @@ import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadService
 import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadType
 import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadVersion
 
-class DownloadDotnetReleaseAction : AnAction() {
+internal class DownloadDotnetReleaseAction : AnAction() {
     override fun actionPerformed(actionEvent: AnActionEvent) {
         val project = actionEvent.project ?: return
 

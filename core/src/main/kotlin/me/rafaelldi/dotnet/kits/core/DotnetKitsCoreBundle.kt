@@ -1,14 +1,13 @@
 package me.rafaelldi.dotnet.kits.core
 
-import com.intellij.ide.minimap.utils.MiniMessagesBundle.getLazyMessage
-import com.intellij.ide.minimap.utils.MiniMessagesBundle.getMessage
+import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls
 import org.jetbrains.annotations.PropertyKey
 
 @NonNls
 private const val BUNDLE = "messages.DotnetKitsCoreBundle"
 
-internal object DotnetKitsCoreBundle {
+internal object DotnetKitsCoreBundle : DynamicBundle(BUNDLE) {
     @JvmStatic
     fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any) =
         getMessage(key, *params)

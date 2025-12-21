@@ -14,7 +14,7 @@ import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.icon.IconKey
 
 @Composable
-fun ContextPopupMenu(
+internal fun ContextPopupMenu(
     popupPositionProvider: PopupPositionProvider,
     onDismissRequest: () -> Unit,
     content: @Composable () -> Unit,
@@ -30,7 +30,7 @@ fun ContextPopupMenu(
 }
 
 @Composable
-fun ContextPopupMenuItem(
+internal fun ContextPopupMenuItem(
     actionText: String,
     actionIcon: IconKey? = null,
     onClick: () -> Unit,
