@@ -29,12 +29,9 @@ kotlin {
 
 repositories {
     mavenCentral()
-
     intellijPlatform {
         defaultRepositories()
     }
-
-    // Needed for tests
     google()
 }
 
@@ -43,6 +40,8 @@ dependencies {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion")) {
             useCache = true
         }
+
+        pluginModule(implementation(project(":core")))
 
         @Suppress("UnstableApiUsage")
         composeUI()
