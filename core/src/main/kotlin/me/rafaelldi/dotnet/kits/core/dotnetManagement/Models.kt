@@ -1,11 +1,11 @@
-package me.rafaelldi.dotnet.kits.core.forklift
+package me.rafaelldi.dotnet.kits.core.dotnetManagement
 
 import me.rafaelldi.dotnet.kits.core.util.extractPreRelease
 import me.rafaelldi.dotnet.kits.core.util.parseSemanticVersion
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
-internal interface DotnetCargo {
+internal interface DotnetArtifact {
     val version: String
     val major: Int
     val minor: Int
@@ -19,7 +19,7 @@ internal data class DotnetSdk(
     override val version: String,
     val path: Path,
     override val installationType: InstallationType
-) : DotnetCargo {
+) : DotnetArtifact {
     override val pathString: String = path.absolutePathString()
 
     override val major: Int
@@ -41,7 +41,7 @@ internal data class DotnetRuntime(
     override val version: String,
     val path: Path,
     override val installationType: InstallationType
-) : DotnetCargo {
+) : DotnetArtifact {
     override val pathString: String = path.absolutePathString()
 
     override val major: Int

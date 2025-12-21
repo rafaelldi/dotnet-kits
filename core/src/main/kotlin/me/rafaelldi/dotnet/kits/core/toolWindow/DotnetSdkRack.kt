@@ -25,8 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.PopupPositionProvider
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
-import me.rafaelldi.dotnet.kits.core.forklift.DotnetCargo
-import me.rafaelldi.dotnet.kits.core.forklift.DotnetSdk
+import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
+import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetSdk
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.ActionButton
@@ -230,9 +230,9 @@ private fun DotnetSdkPallet(
 }
 
 @Composable
-private fun DotnetCargoVersion(dotnetCargo: DotnetCargo) {
+private fun DotnetCargoVersion(dotnetArtifact: DotnetArtifact) {
     Text(
-        text = dotnetCargo.version,
+        text = dotnetArtifact.version,
         style = JewelTheme.defaultTextStyle.copy(
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
@@ -244,9 +244,9 @@ private fun DotnetCargoVersion(dotnetCargo: DotnetCargo) {
 }
 
 @Composable
-private fun DotnetCargoPath(dotnetCargo: DotnetCargo) {
+private fun DotnetCargoPath(dotnetArtifact: DotnetArtifact) {
     Text(
-        text = dotnetCargo.pathString,
+        text = dotnetArtifact.pathString,
         style = JewelTheme.defaultTextStyle.copy(
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,

@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.kits.core.forklift
+package me.rafaelldi.dotnet.kits.core.dotnetManagement
 
 enum class InstallationType {
     Default,

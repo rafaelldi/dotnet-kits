@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-package me.rafaelldi.dotnet.kits.core.forklift
+package me.rafaelldi.dotnet.kits.core.dotnetManagement
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -24,18 +24,18 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 
-internal interface DotnetForkliftApi {
+internal interface DotnetManagementApi {
     val dotnetSdkFlow: StateFlow<List<DotnetSdk>>
     suspend fun reloadDotnetSdks()
     suspend fun deleteSdk(dotnetSdk: DotnetSdk)
 }
 
 @Service(Service.Level.PROJECT)
-internal class DotnetForklift(private val project: Project) : DotnetForkliftApi {
+internal class DotnetManagementService(private val project: Project) : DotnetManagementApi {
     companion object {
-        internal fun getInstance(project: Project): DotnetForklift = project.service()
+        internal fun getInstance(project: Project): DotnetManagementService = project.service()
 
-        private val LOG = logger<DotnetForklift>()
+        private val LOG = logger<DotnetManagementService>()
 
         private const val LIST_SDKS_OPTION = "--list-sdks"
         private const val LIST_RUNTIMES_OPTION = "--list-runtimes"

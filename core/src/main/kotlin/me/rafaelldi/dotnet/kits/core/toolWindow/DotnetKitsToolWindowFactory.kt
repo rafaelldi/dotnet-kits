@@ -7,7 +7,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import me.rafaelldi.dotnet.kits.core.DotnetKitsService
-import me.rafaelldi.dotnet.kits.core.forklift.DotnetForklift
+import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetManagementService
 import org.jetbrains.jewel.bridge.addComposeTab
 
 
@@ -17,11 +17,11 @@ internal class DotnetKitsToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val viewModel = DotnetRackViewModel(
             project.service<DotnetKitsService>().createScope(::DotnetRackViewModel.name),
-            DotnetForklift.getInstance(project)
+            DotnetManagementService.getInstance(project)
         )
         Disposer.register(toolWindow.disposable, viewModel)
 
-        toolWindow.addComposeTab("SDKs") {
+        toolWindow.addComposeTab("SDKs", focusOnClickInside = true) {
             DotnetSdkRack(viewModel)
         }
     }

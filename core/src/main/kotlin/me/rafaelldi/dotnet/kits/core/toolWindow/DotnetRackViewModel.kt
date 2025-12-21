@@ -6,8 +6,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import me.rafaelldi.dotnet.kits.core.forklift.DotnetForkliftApi
-import me.rafaelldi.dotnet.kits.core.forklift.DotnetSdk
+import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetManagementApi
+import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetSdk
 
 internal interface DotnetRackViewModelApi : Disposable {
     val dotnetSdkFlow: StateFlow<List<DotnetSdk>>
@@ -17,7 +17,7 @@ internal interface DotnetRackViewModelApi : Disposable {
 
 internal class DotnetRackViewModel(
     private val viewModelScope: CoroutineScope,
-    private val dotnetForklift: DotnetForkliftApi
+    private val dotnetForklift: DotnetManagementApi
 ) : DotnetRackViewModelApi {
 
     private var currentReloadSdksJob: Job? = null
