@@ -8,12 +8,15 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.diagnostic.trace
 import com.intellij.openapi.project.Project
 import com.intellij.platform.eel.EelApi
+import com.intellij.platform.eel.fs.copy
 import com.intellij.platform.eel.fs.createTemporaryFile
+import com.intellij.platform.eel.fs.createTemporaryDirectory
 import com.intellij.platform.eel.getOrNull
 import com.intellij.platform.eel.path.EelPath
 import com.intellij.platform.eel.provider.asEelPath
 import com.intellij.platform.eel.provider.asNioPath
 import com.intellij.platform.eel.provider.getEelDescriptor
+import com.intellij.platform.eel.provider.utils.getOrThrowFileSystemException
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -61,11 +64,14 @@ internal class DotnetDownloadService(private val project: Project) {
                 return Result.failure(IllegalStateException("Failed to find latest release for model: $model"))
             }
 
-            val targetPath = calculateTargetPath(targetFolder, model.type, latestRelease.releaseVersion).asEelPath()
-            val foldersInTargetPath = eelApi.fs.listDirectory(requireNotNull(targetPath.parent)).getOrNull()
-            if (foldersInTargetPath?.contains(latestRelease.releaseVersion) == true) {
-                LOG.info("Release version ${latestRelease.releaseVersion} already exists at target path, skipping downloading")
-                return Result.failure(IllegalStateException("Release version ${latestRelease.releaseVersion} already exists at target path, skipping downloading"))
+            val versionToDownload = getVersionToDownload(latestRelease, model.type)
+            val targetPath = calculateTargetPath(targetFolder, model.type, versionToDownload).asEelPath()
+            LOG.trace { "Target path for the release download: $targetPath" }
+
+            val foldersAtTargetPath = eelApi.fs.listDirectory(requireNotNull(targetPath.parent)).getOrNull()
+            if (foldersAtTargetPath?.contains(versionToDownload) == true) {
+                LOG.info("Release version $versionToDownload already exists at target path, skipping downloading")
+                return Result.failure(IllegalStateException("Release version $versionToDownload already exists at target path, skipping downloading"))
             }
 
             val downloadedArchive = downloadReleaseArchive(model, latestRelease, eelApi)
@@ -74,7 +80,7 @@ internal class DotnetDownloadService(private val project: Project) {
                 return Result.failure(IllegalStateException("Unable to download dotnet release archive"))
             }
 
-            unpackReleaseArchive(downloadedArchive, targetPath, eelApi)
+            unpackReleaseArchive(downloadedArchive, versionToDownload, model.type, targetPath, eelApi)
 
             return Result.success(targetPath.asNioPath())
         } catch (ce: CancellationException) {
@@ -139,6 +145,13 @@ internal class DotnetDownloadService(private val project: Project) {
         return releaseVersionIndex
     }
 
+    private fun getVersionToDownload(release: DotnetRelease, type: DotnetDownloadType): String =
+        when (type) {
+            DotnetDownloadType.Sdk -> release.sdk.version
+            DotnetDownloadType.Runtime -> release.runtime.version
+            DotnetDownloadType.AspNetRuntime -> release.aspNetCoreRuntime.version
+        }
+
     private fun calculateTargetPath(targetFolder: Path, type: DotnetDownloadType, releaseVersion: String): Path =
         when (type) {
             DotnetDownloadType.Sdk -> targetFolder
@@ -181,10 +194,6 @@ internal class DotnetDownloadService(private val project: Project) {
         }
 
         val downloadedArchive = downloadReleaseArchive(archiveToDownload, model.rid.fileExtension, eelApi)
-        if (downloadedArchive == null) {
-            LOG.warn("Unable to download dotnet release archive")
-            return null
-        }
 
         return downloadedArchive
     }
@@ -193,17 +202,13 @@ internal class DotnetDownloadService(private val project: Project) {
         dotnetReleaseFile: DotnetReleaseFile,
         extension: String,
         eelApi: EelApi,
-    ): EelPath? {
+    ): EelPath {
         val tempFile = eelApi.fs.createTemporaryFile()
             .prefix("dotnet-kits")
             .suffix(extension)
             .deleteOnExit(true)
             .eelIt()
-            .getOrNull()
-        if (tempFile == null) {
-            LOG.warn("Failed to create a temporary file")
-            return null
-        }
+            .getOrThrowFileSystemException()
 
         LOG.trace { "Temporary file for the release download: ${tempFile.fileName}" }
 
@@ -222,9 +227,45 @@ internal class DotnetDownloadService(private val project: Project) {
 
     private suspend fun unpackReleaseArchive(
         releaseArchive: EelPath,
+        releaseVersion: String,
+        type: DotnetDownloadType,
         targetPath: EelPath,
         eelApi: EelApi,
     ) {
-        eelApi.archive.extract(releaseArchive, targetPath)
+        val tempDir = eelApi.fs.createTemporaryDirectory()
+            .prefix("dotnet-kits-extract")
+            .deleteOnExit(true)
+            .eelIt()
+            .getOrThrowFileSystemException()
+
+        LOG.trace { "Temporary directory for the release extraction: ${tempDir.fileName}" }
+
+        eelApi.archive.extract(releaseArchive, tempDir)
+
+        val sourceSubfolder = when (type) {
+            DotnetDownloadType.Sdk -> tempDir.resolve("sdk")
+            DotnetDownloadType.Runtime -> tempDir.resolve("shared").resolve("Microsoft.NETCore.App")
+            DotnetDownloadType.AspNetRuntime -> tempDir.resolve("shared").resolve("Microsoft.AspNetCore.App")
+        }
+
+        val versionFolders = eelApi.fs.listDirectory(sourceSubfolder).getOrNull()
+        if (versionFolders.isNullOrEmpty()) {
+            LOG.warn("No version folder found in extracted archive at $sourceSubfolder")
+            error("No version folder found in extracted release archive")
+        }
+
+        if (!versionFolders.contains(releaseVersion)) {
+            error("Unable to find version folder $releaseVersion in extracted release archive")
+        }
+
+        val sourcePath = sourceSubfolder.resolve(releaseVersion)
+
+        eelApi.fs
+            .copy(sourcePath, targetPath)
+            .copyRecursively(true)
+            .followLinks(true)
+            .replaceExisting(true)
+            .eelIt()
+            .getOrThrowFileSystemException()
     }
 }
