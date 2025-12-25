@@ -1,6 +1,6 @@
 package me.rafaelldi.dotnet.kits.core.dotnetDownload
 
-internal data class DotnetDownloadModel(
+internal data class DotnetArtifactModel(
     val version: DotnetDownloadVersion,
     val type: DotnetDownloadType,
     val rid: DotnetDownloadRid

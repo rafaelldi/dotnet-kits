@@ -8,14 +8,14 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.builder.toNullableProperty
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
 
-internal class DotnetDownloadDialog(
+internal class DownloadDotnetArtifactDialog(
     project: Project,
     version: DotnetDownloadVersion,
     type: DotnetDownloadType,
     rid: DotnetDownloadRid
 ) : DialogWrapper(project) {
 
-    private val model = DotnetDownloadDialogModel(version, type, rid)
+    private val model = DownloadDotnetArtifactDialogModel(version, type, rid)
 
     init {
         init()
@@ -41,7 +41,7 @@ internal class DotnetDownloadDialog(
     fun getModel() = model
 }
 
-internal data class DotnetDownloadDialogModel(
+internal data class DownloadDotnetArtifactDialogModel(
     var version: DotnetDownloadVersion,
     var type: DotnetDownloadType,
     var rid: DotnetDownloadRid

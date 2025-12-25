@@ -15,7 +15,7 @@
 
     <actions>
         <action id="Dotnet.Kits.Receive"
-                class="me.rafaelldi.dotnet.kits.core.actions.DownloadDotnetReleaseAction"
+                class="me.rafaelldi.dotnet.kits.core.actions.DownloadDotnetArtifactAction"
                 icon="AllIcons.Actions.Download"/>
     </actions>
 </idea-plugin>

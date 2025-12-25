@@ -11,14 +11,14 @@ import com.intellij.openapi.progress.currentThreadCoroutineScope
 import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.launch
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
-import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadDialog
-import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadModel
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DownloadDotnetArtifactDialog
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetArtifactModel
 import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadRid
-import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadService
+import me.rafaelldi.dotnet.kits.core.dotnetDownload.DownloadDotnetArtifactService
 import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadType
 import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadVersion
 
-internal class DownloadDotnetReleaseAction : AnAction() {
+internal class DownloadDotnetArtifactAction : AnAction() {
     override fun actionPerformed(actionEvent: AnActionEvent) {
         val project = actionEvent.project ?: return
 
@@ -26,16 +26,16 @@ internal class DownloadDotnetReleaseAction : AnAction() {
         val type = DotnetDownloadType.Sdk
         val rid = DotnetDownloadRid.LinuxX64
 
-        val dialog = DotnetDownloadDialog(project, version, type, rid)
+        val dialog = DownloadDotnetArtifactDialog(project, version, type, rid)
         if (dialog.showAndGet()) {
             val model = dialog.getModel()
 
-            val service = DotnetDownloadService.getInstance(project)
+            val service = DownloadDotnetArtifactService.getInstance(project)
             currentThreadCoroutineScope().launch {
                 val releaseFolder =
                     withBackgroundProgress(project, DotnetKitsCoreBundle.message("progress.download.dotnet")) {
                         service.download(
-                            DotnetDownloadModel(model.version, model.type, model.rid)
+                            DotnetArtifactModel(model.version, model.type, model.rid)
                         )
                     }
 

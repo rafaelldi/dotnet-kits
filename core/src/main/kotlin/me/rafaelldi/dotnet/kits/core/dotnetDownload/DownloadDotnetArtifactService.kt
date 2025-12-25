@@ -30,14 +30,14 @@ import java.nio.file.Path
 import kotlin.io.path.outputStream
 
 @Service(Service.Level.PROJECT)
-internal class DotnetDownloadService(private val project: Project) {
+internal class DownloadDotnetArtifactService(private val project: Project) {
     companion object {
-        fun getInstance(project: Project): DotnetDownloadService = project.service()
+        fun getInstance(project: Project): DownloadDotnetArtifactService = project.service()
 
         private const val DOTNET_FEED_URL =
             "https://builds.dotnet.microsoft.com/dotnet/release-metadata/releases-index.json"
 
-        private val LOG = logger<DotnetDownloadService>()
+        private val LOG = logger<DownloadDotnetArtifactService>()
     }
 
     private val client = HttpClient(CIO) {
@@ -48,13 +48,13 @@ internal class DotnetDownloadService(private val project: Project) {
         }
     }
 
-    suspend fun download(model: DotnetDownloadModel): Result<Path> {
+    suspend fun download(model: DotnetArtifactModel): Result<Path> {
         val eelApi = project.getEelDescriptor().toEelApi()
         val defaultDotnetTargetFolder = eelApi.userInfo.home.resolve(".dotnet")
         return download(model, defaultDotnetTargetFolder.asNioPath())
     }
 
-    suspend fun download(model: DotnetDownloadModel, targetFolder: Path): Result<Path> {
+    suspend fun download(model: DotnetArtifactModel, targetFolder: Path): Result<Path> {
         try {
             val eelApi = project.getEelDescriptor().toEelApi()
 
@@ -91,7 +91,7 @@ internal class DotnetDownloadService(private val project: Project) {
         }
     }
 
-    private suspend fun getLatestReleaseOfModel(model: DotnetDownloadModel): DotnetRelease? {
+    private suspend fun getLatestReleaseOfModel(model: DotnetArtifactModel): DotnetRelease? {
         val index = receiveDotnetReleaseIndex()
         if (index == null) {
             LOG.warn("Failed to receive dotnet release index")
@@ -170,7 +170,7 @@ internal class DotnetDownloadService(private val project: Project) {
         }
 
     private suspend fun downloadReleaseArchive(
-        model: DotnetDownloadModel,
+        model: DotnetArtifactModel,
         latestRelease: DotnetRelease,
         eelApi: EelApi,
     ): EelPath? {
