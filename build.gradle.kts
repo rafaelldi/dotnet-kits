@@ -27,7 +27,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        intellijIdeaCommunity(providers.gradleProperty("platformVersion")) {
+        intellijIdea(providers.gradleProperty("platformVersion")) {
             useCache = true
         }
 
