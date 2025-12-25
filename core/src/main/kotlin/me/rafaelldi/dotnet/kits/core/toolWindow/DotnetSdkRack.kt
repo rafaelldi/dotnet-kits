@@ -157,7 +157,7 @@ private fun DotnetSdkItem(
                 .wrapContentSize()
                 .fillMaxWidth()
                 .background(
-                    JewelTheme.colorPalette.gray(3),
+                    requireNotNull(JewelTheme.colorPalette.grayOrNull(3)),
                     localSdkShape
                 )
                 .padding(16.dp)

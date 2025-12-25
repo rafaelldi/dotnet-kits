@@ -39,7 +39,7 @@ internal class DownloadDotnetReleaseAction : AnAction() {
                         )
                     }
 
-                if (releaseFolder != null) {
+                releaseFolder.fold({
                     Notification(
                         "Dotnet Kits",
                         DotnetKitsCoreBundle.message("notification.download.dotnet.succeeded"),
@@ -49,19 +49,19 @@ internal class DownloadDotnetReleaseAction : AnAction() {
                         .addAction(object :
                             NotificationAction(DotnetKitsCoreBundle.message("notification.download.dotnet.succeeded.action")) {
                             override fun actionPerformed(e: AnActionEvent, notification: Notification) {
-                                RevealFileAction.openFile(releaseFolder)
+                                RevealFileAction.openFile(it)
                             }
                         })
                         .notify(project)
-                } else {
+                }, {
                     Notification(
                         "Dotnet Kits",
                         DotnetKitsCoreBundle.message("notification.download.dotnet.failed"),
-                        "",
+                        it.message ?: "",
                         NotificationType.ERROR
                     )
                         .notify(project)
-                }
+                })
             }
         }
     }

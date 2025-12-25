@@ -7,9 +7,11 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.diagnostic.trace
 import com.intellij.openapi.project.Project
+import com.intellij.platform.eel.EelApi
 import com.intellij.platform.eel.fs.createTemporaryFile
 import com.intellij.platform.eel.getOrNull
 import com.intellij.platform.eel.path.EelPath
+import com.intellij.platform.eel.provider.asEelPath
 import com.intellij.platform.eel.provider.asNioPath
 import com.intellij.platform.eel.provider.getEelDescriptor
 import io.ktor.client.*
@@ -43,7 +45,47 @@ internal class DotnetDownloadService(private val project: Project) {
         }
     }
 
-    suspend fun download(model: DotnetDownloadModel): Path? {
+    suspend fun download(model: DotnetDownloadModel): Result<Path> {
+        val eelApi = project.getEelDescriptor().toEelApi()
+        val defaultDotnetTargetFolder = eelApi.userInfo.home.resolve(".dotnet")
+        return download(model, defaultDotnetTargetFolder.asNioPath())
+    }
+
+    suspend fun download(model: DotnetDownloadModel, targetFolder: Path): Result<Path> {
+        try {
+            val eelApi = project.getEelDescriptor().toEelApi()
+
+            val latestRelease = getLatestReleaseOfModel(model)
+            if (latestRelease == null) {
+                LOG.warn("Failed to find latest release for model: $model")
+                return Result.failure(IllegalStateException("Failed to find latest release for model: $model"))
+            }
+
+            val targetPath = calculateTargetPath(targetFolder, model.type, latestRelease.releaseVersion).asEelPath()
+            val foldersInTargetPath = eelApi.fs.listDirectory(requireNotNull(targetPath.parent)).getOrNull()
+            if (foldersInTargetPath?.contains(latestRelease.releaseVersion) == true) {
+                LOG.info("Release version ${latestRelease.releaseVersion} already exists at target path, skipping downloading")
+                return Result.failure(IllegalStateException("Release version ${latestRelease.releaseVersion} already exists at target path, skipping downloading"))
+            }
+
+            val downloadedArchive = downloadReleaseArchive(model, latestRelease, eelApi)
+            if (downloadedArchive == null) {
+                LOG.warn("Unable to download dotnet release archive for model: $model")
+                return Result.failure(IllegalStateException("Unable to download dotnet release archive"))
+            }
+
+            unpackReleaseArchive(downloadedArchive, targetPath, eelApi)
+
+            return Result.success(targetPath.asNioPath())
+        } catch (ce: CancellationException) {
+            throw ce
+        } catch (e: Exception) {
+            LOG.warn("Failed to download dotnet release", e)
+            return Result.failure(e)
+        }
+    }
+
+    private suspend fun getLatestReleaseOfModel(model: DotnetDownloadModel): DotnetRelease? {
         val index = receiveDotnetReleaseIndex()
         if (index == null) {
             LOG.warn("Failed to receive dotnet release index")
@@ -68,34 +110,7 @@ internal class DotnetDownloadService(private val project: Project) {
             return null
         }
 
-        val filesToDownload = when (model.type) {
-            DotnetDownloadType.Sdk -> latestRelease.sdk.files
-            DotnetDownloadType.Runtime -> latestRelease.runtime.files
-            DotnetDownloadType.AspNetRuntime -> latestRelease.aspNetCoreRuntime.files
-        }
-        val fileNameToDownload = buildString {
-            append(model.type.id)
-            append("-")
-            append(model.rid.id)
-            append(model.rid.fileExtension)
-        }
-        LOG.trace { "File to download: $fileNameToDownload" }
-
-        val archiveToDownload = filesToDownload.firstOrNull { it.name == fileNameToDownload }
-        if (archiveToDownload == null) {
-            LOG.warn("Failed to find file to download for version: ${model.version}")
-            return null
-        }
-
-        val downloadedArchive = downloadReleaseArchive(archiveToDownload, model.rid.fileExtension)
-        if (downloadedArchive == null) {
-            LOG.warn("Unable to download dotnet release archive")
-            return null
-        }
-
-        val releaseFolder = unpackReleaseArchive(downloadedArchive, model.type, releaseVersion.latestRelease)
-
-        return releaseFolder?.asNioPath()
+        return latestRelease
     }
 
     private suspend fun receiveDotnetReleaseIndex(): DotnetReleaseIndex? {
@@ -124,65 +139,92 @@ internal class DotnetDownloadService(private val project: Project) {
         return releaseVersionIndex
     }
 
-    private suspend fun downloadReleaseArchive(dotnetReleaseFile: DotnetReleaseFile, extension: String): EelPath? {
-        try {
-            val eelApi = project.getEelDescriptor().toEelApi()
-            val tempFile = eelApi.fs.createTemporaryFile()
-                .prefix("dotnet-warehouse")
-                .suffix(extension)
-                .deleteOnExit(true)
-                .eelIt()
-                .getOrNull()
-            if (tempFile == null) {
-                LOG.warn("Failed to create a temporary file")
-                return null
-            }
+    private fun calculateTargetPath(targetFolder: Path, type: DotnetDownloadType, releaseVersion: String): Path =
+        when (type) {
+            DotnetDownloadType.Sdk -> targetFolder
+                .resolve("sdk")
+                .resolve(releaseVersion)
 
-            LOG.trace { "Temporary file for the release download: ${tempFile.fileName}" }
+            DotnetDownloadType.Runtime -> targetFolder
+                .resolve("shared")
+                .resolve("Microsoft.NETCore.App")
+                .resolve(releaseVersion)
 
-            val tempFileWriteChannel = tempFile
-                .asNioPath()
-                .outputStream()
-                .asByteWriteChannel()
+            DotnetDownloadType.AspNetRuntime -> targetFolder
+                .resolve("shared")
+                .resolve("Microsoft.AspNetCore.App")
+                .resolve(releaseVersion)
+        }
 
-            client.prepareGet(dotnetReleaseFile.url).execute { httpResponse ->
-                val channel: ByteReadChannel = httpResponse.body()
-                channel.copyAndClose(tempFileWriteChannel)
-            }
+    private suspend fun downloadReleaseArchive(
+        model: DotnetDownloadModel,
+        latestRelease: DotnetRelease,
+        eelApi: EelApi,
+    ): EelPath? {
+        val filesToDownload = when (model.type) {
+            DotnetDownloadType.Sdk -> latestRelease.sdk.files
+            DotnetDownloadType.Runtime -> latestRelease.runtime.files
+            DotnetDownloadType.AspNetRuntime -> latestRelease.aspNetCoreRuntime.files
+        }
+        val fileNameToDownload = buildString {
+            append(model.type.id)
+            append("-")
+            append(model.rid.id)
+            append(model.rid.fileExtension)
+        }
+        LOG.trace { "File to download: $fileNameToDownload" }
 
-            return tempFile
-        } catch (ce: CancellationException) {
-            throw ce
-        } catch (e: Exception) {
-            LOG.warn("Failed to download the dotnet release to a temporary file", e)
+        val archiveToDownload = filesToDownload.firstOrNull { it.name == fileNameToDownload }
+        if (archiveToDownload == null) {
+            LOG.warn("Failed to find a file to download for version: ${model.version}")
             return null
         }
+
+        val downloadedArchive = downloadReleaseArchive(archiveToDownload, model.rid.fileExtension, eelApi)
+        if (downloadedArchive == null) {
+            LOG.warn("Unable to download dotnet release archive")
+            return null
+        }
+
+        return downloadedArchive
+    }
+
+    private suspend fun downloadReleaseArchive(
+        dotnetReleaseFile: DotnetReleaseFile,
+        extension: String,
+        eelApi: EelApi,
+    ): EelPath? {
+        val tempFile = eelApi.fs.createTemporaryFile()
+            .prefix("dotnet-kits")
+            .suffix(extension)
+            .deleteOnExit(true)
+            .eelIt()
+            .getOrNull()
+        if (tempFile == null) {
+            LOG.warn("Failed to create a temporary file")
+            return null
+        }
+
+        LOG.trace { "Temporary file for the release download: ${tempFile.fileName}" }
+
+        val tempFileWriteChannel = tempFile
+            .asNioPath()
+            .outputStream()
+            .asByteWriteChannel()
+
+        client.prepareGet(dotnetReleaseFile.url).execute { httpResponse ->
+            val channel: ByteReadChannel = httpResponse.body()
+            channel.copyAndClose(tempFileWriteChannel)
+        }
+
+        return tempFile
     }
 
     private suspend fun unpackReleaseArchive(
         releaseArchive: EelPath,
-        type: DotnetDownloadType,
-        releaseVersion: String
-    ): EelPath? {
-        try {
-            val eelApi = project.getEelDescriptor().toEelApi()
-
-            val userHome = eelApi.userInfo.home.resolve(".warehouse")
-            val releaseTypePath = when (type) {
-                DotnetDownloadType.Sdk -> userHome.resolve("sdk")
-                DotnetDownloadType.Runtime -> userHome.resolve("runtime")
-                DotnetDownloadType.AspNetRuntime -> userHome.resolve("aspnetcore")
-            }
-            val targetPath = releaseTypePath.resolve(releaseVersion)
-
-            eelApi.archive.extract(releaseArchive, targetPath)
-
-            return targetPath
-        } catch (ce: CancellationException) {
-            throw ce
-        } catch (e: Exception) {
-            LOG.warn("Failed to unpack the temporary dotnet release archive", e)
-            return null
-        }
+        targetPath: EelPath,
+        eelApi: EelApi,
+    ) {
+        eelApi.archive.extract(releaseArchive, targetPath)
     }
 }
