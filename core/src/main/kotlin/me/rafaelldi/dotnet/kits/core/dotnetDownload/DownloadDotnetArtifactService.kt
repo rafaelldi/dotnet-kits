@@ -29,6 +29,14 @@ import kotlinx.serialization.json.Json
 import java.nio.file.Path
 import kotlin.io.path.outputStream
 
+/**
+ * Service responsible for downloading .NET artifacts from the official Microsoft .NET release feeds.
+ *
+ * The service supports downloading three types of .NET artifacts:
+ * - .NET SDK
+ * - .NET Runtime
+ * - ASP.NET Core Runtime
+ */
 @Service(Service.Level.PROJECT)
 internal class DownloadDotnetArtifactService(private val project: Project) {
     companion object {
@@ -48,12 +56,46 @@ internal class DownloadDotnetArtifactService(private val project: Project) {
         }
     }
 
+    /**
+     * Downloads the latest version of a .NET artifact to the default `.dotnet` directory in the user's home folder.
+     *
+     * This method queries the Microsoft .NET release feeds to find the latest version available for the
+     * specified .NET version channel, downloads the appropriate archive for the target platform (RID),
+     * and extracts it to the default location: `~/.dotnet/`.
+     *
+     * The artifact will be placed in the standard .NET directory structure:
+     * - SDK: `~/.dotnet/sdk/{version}/`
+     * - Runtime: `~/.dotnet/shared/Microsoft.NETCore.App/{version}/`
+     * - ASP.NET Runtime: `~/.dotnet/shared/Microsoft.AspNetCore.App/{version}/`
+     *
+     * @param model The artifact model specifying the .NET version, type (SDK/Runtime/ASP.NET Runtime),
+     *              and runtime identifier (RID) for the target platform
+     * @return A [Result] containing the [Path] to the installed artifact on success, or a failure with an exception.
+     */
     suspend fun download(model: DotnetArtifactModel): Result<Path> {
         val eelApi = project.getEelDescriptor().toEelApi()
         val defaultDotnetTargetFolder = eelApi.userInfo.home.resolve(".dotnet")
         return download(model, defaultDotnetTargetFolder.asNioPath())
     }
 
+    /**
+     * Downloads the latest version of a .NET artifact to a specified target directory.
+     *
+     * This method queries the Microsoft .NET release feeds to find the latest version available for the
+     * specified .NET version channel, downloads the appropriate archive for the target platform (RID),
+     * and extracts it to the specified target folder.
+     *
+     * The artifact will be placed in subdirectories of the target folder following the standard .NET structure:
+     * - SDK: `{targetFolder}/sdk/{version}/`
+     * - Runtime: `{targetFolder}/shared/Microsoft.NETCore.App/{version}/`
+     * - ASP.NET Runtime: `{targetFolder}/shared/Microsoft.AspNetCore.App/{version}/`
+     *
+     * @param model The artifact model specifying the .NET version, type (SDK/Runtime/ASP.NET Runtime),
+     *              and runtime identifier (RID) for the target platform
+     * @param targetFolder The base directory where the artifact should be installed. The artifact will be
+     *                     placed in appropriate subdirectories based on its type.
+     * @return A [Result] containing the [Path] to the installed artifact on success, or a failure with an exception.
+     */
     suspend fun download(model: DotnetArtifactModel, targetFolder: Path): Result<Path> {
         try {
             val eelApi = project.getEelDescriptor().toEelApi()
