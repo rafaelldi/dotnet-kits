@@ -16,17 +16,14 @@ import com.intellij.platform.eel.provider.asNioPath
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.eel.provider.utils.awaitProcessResult
 import com.intellij.platform.eel.provider.utils.stdoutString
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 
 internal interface DotnetManagementApi {
-    val dotnetSdkFlow: StateFlow<List<DotnetSdk>>
-    suspend fun reloadDotnetSdks()
+    suspend fun findDotnetSdks(): List<DotnetSdk>
+    suspend fun findDotnetRuntimes(): List<DotnetRuntime>
     suspend fun deleteSdk(dotnetSdk: DotnetSdk)
 }
 
@@ -41,20 +38,9 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
         private const val LIST_RUNTIMES_OPTION = "--list-runtimes"
     }
 
-    private val dotnetSdks: MutableStateFlow<List<DotnetSdk>> = MutableStateFlow(emptyList())
-    override val dotnetSdkFlow: StateFlow<List<DotnetSdk>> = dotnetSdks.asStateFlow()
-
-    override suspend fun reloadDotnetSdks() {
-        val sdks = findDotnetSdks()
-        dotnetSdks.emit(sdks)
-    }
-
-    override suspend fun deleteSdk(dotnetSdk: DotnetSdk) {
-    }
-
-    private suspend fun findDotnetSdks(): List<DotnetSdk> {
+    override suspend fun findDotnetSdks(): List<DotnetSdk> {
         val eelApi = project.getEelDescriptor().toEelApi()
-        val executablePaths = getDotnetExecutablePaths(eelApi) + getJetBrainsDotnetExecutablePaths(eelApi)
+        val executablePaths = getDotnetExecutablePaths(eelApi) + getRiderDotnetExecutablePaths(eelApi)
         return buildList {
             for ((executablePath, installationType) in executablePaths) {
                 if (!executablePath.exists()) continue
@@ -64,10 +50,25 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
         }.sortedWith(compareBy({ it.major }, { it.minor }, { it.patch }, { it.preRelease }))
     }
 
+    override suspend fun findDotnetRuntimes(): List<DotnetRuntime> {
+        val eelApi = project.getEelDescriptor().toEelApi()
+        val executablePaths = getDotnetExecutablePaths(eelApi) + getRiderDotnetExecutablePaths(eelApi)
+        return buildList {
+            for ((executablePath, installationType) in executablePaths) {
+                if (!executablePath.exists()) continue
+                val runtimes = findDotnetRuntimes(eelApi.exec, executablePath, installationType)
+                addAll(runtimes)
+            }
+        }.sortedWith(compareBy({ it.major }, { it.minor }, { it.patch }, { it.preRelease }))
+    }
+
+    override suspend fun deleteSdk(dotnetSdk: DotnetSdk) {
+    }
+
     private suspend fun findDotnetSdks(
         execApi: EelExecApi,
         executablePath: Path,
-        installationType: InstallationType
+        installationFolder: InstallationFolder
     ): List<DotnetSdk> {
         val executionResult = executeDotnetCommand(execApi, executablePath, LIST_SDKS_OPTION)
             ?: return emptyList()
@@ -79,29 +80,17 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
 
                 val version = line.take(spaceIndex)
                 val pathString = line.substring(spaceIndex + 2, line.length - 1)
-                val sdk = DotnetSdk(version, Path.of(pathString).resolve(version), installationType)
+                val sdk = DotnetSdk(version, Path.of(pathString).resolve(version), installationFolder)
 
                 add(sdk)
             }
         }
     }
 
-    private suspend fun findDotnetRuntimes(): List<DotnetRuntime> {
-        val eelApi = project.getEelDescriptor().toEelApi()
-        val executablePaths = getDotnetExecutablePaths(eelApi) + getJetBrainsDotnetExecutablePaths(eelApi)
-        return buildList {
-            for ((executablePath, installationType) in executablePaths) {
-                if (!executablePath.exists()) continue
-                val runtimes = findDotnetRuntimes(eelApi.exec, executablePath, installationType)
-                addAll(runtimes)
-            }
-        }.sortedWith(compareBy({ it.major }, { it.minor }, { it.patch }, { it.preRelease }))
-    }
-
     private suspend fun findDotnetRuntimes(
         execApi: EelExecApi,
         executablePath: Path,
-        installationType: InstallationType
+        installationFolder: InstallationFolder
     ): List<DotnetRuntime> {
         val executionResult = executeDotnetCommand(execApi, executablePath, LIST_RUNTIMES_OPTION)
             ?: return emptyList()
@@ -116,7 +105,7 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
                 val type = line.take(firstSpaceIndex)
                 val version = line.substring(firstSpaceIndex + 1, secondSpaceIndex)
                 val pathString = line.substring(secondSpaceIndex + 2, line.length - 1)
-                val runtime = DotnetRuntime(type, version, Path.of(pathString), installationType)
+                val runtime = DotnetRuntime(type, version, Path.of(pathString), installationFolder)
 
                 add(runtime)
             }
@@ -125,35 +114,35 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
 
 
     // https://learn.microsoft.com/en-us/dotnet/core/install/how-to-detect-installed-versions?pivots=os-linux#check-for-install-folders
-    private fun getDotnetExecutablePaths(eelApi: EelApi): List<Pair<Path, InstallationType>> {
+    private fun getDotnetExecutablePaths(eelApi: EelApi): List<Pair<Path, InstallationFolder>> {
         when (eelApi.platform) {
             is EelPlatform.Windows -> {
                 return buildList {
-                    add(Path.of("C:\\Program Files\\dotnet\\dotnet.exe") to InstallationType.Default)
+                    add(Path.of("C:\\Program Files\\dotnet\\dotnet.exe") to InstallationFolder.Default)
                 }
             }
 
             is EelPlatform.Linux -> {
                 return buildList {
                     val userHome = eelApi.userInfo.home.asNioPath()
-                    add(userHome.resolve(".dotnet/dotnet") to InstallationType.Manual)
-                    add(Path.of("/usr/lib/dotnet/dotnet") to InstallationType.Manual)
-                    add(Path.of("/usr/share/dotnet/dotnet") to InstallationType.Manual)
-                    add(Path.of("/usr/lib64/dotnet/dotnet") to InstallationType.Default)
+                    add(userHome.resolve(".dotnet/dotnet") to InstallationFolder.Manual)
+                    add(Path.of("/usr/lib/dotnet/dotnet") to InstallationFolder.Manual)
+                    add(Path.of("/usr/share/dotnet/dotnet") to InstallationFolder.Manual)
+                    add(Path.of("/usr/lib64/dotnet/dotnet") to InstallationFolder.Default)
                 }
             }
 
             else -> {
                 return buildList {
                     val userHome = eelApi.userInfo.home.asNioPath()
-                    add(userHome.resolve(".dotnet/dotnet") to InstallationType.Manual)
-                    add(Path.of("/usr/local/share/dotnet/dotnet") to InstallationType.Default)
+                    add(userHome.resolve(".dotnet/dotnet") to InstallationFolder.Manual)
+                    add(Path.of("/usr/local/share/dotnet/dotnet") to InstallationFolder.Default)
                 }
             }
         }
     }
 
-    private fun getJetBrainsDotnetExecutablePaths(eelApi: EelApi): List<Pair<Path, InstallationType>> {
+    private fun getRiderDotnetExecutablePaths(eelApi: EelApi): List<Pair<Path, InstallationFolder>> {
         val dotnetCmdPath = when (eelApi.platform) {
             is EelPlatform.Windows -> {
                 val appData = System.getenv("LOCALAPPDATA")
@@ -172,7 +161,7 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
 
         return buildList {
             for (folder in dotnetCmdPath.listDirectoryEntries().filter { it.isDirectory() }) {
-                add(folder.resolve(executable) to InstallationType.Rider)
+                add(folder.resolve(executable) to InstallationFolder.Rider)
             }
         }
     }

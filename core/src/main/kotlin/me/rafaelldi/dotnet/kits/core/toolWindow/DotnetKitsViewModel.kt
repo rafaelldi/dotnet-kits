@@ -25,18 +25,12 @@ internal class DotnetKitsViewModel(
     private val _dotnetSdkFlow = MutableStateFlow(emptyList<DotnetSdk>())
     override val dotnetSdkFlow: StateFlow<List<DotnetSdk>> = _dotnetSdkFlow.asStateFlow()
 
-    init {
-        dotnetManagement
-            .dotnetSdkFlow
-            .onEach { _dotnetSdkFlow.emit(it) }
-            .launchIn(viewModelScope)
-    }
-
     override fun onReloadLocalSdks() {
         currentReloadSdksJob?.cancel()
 
         currentReloadSdksJob = viewModelScope.launch {
-            dotnetManagement.reloadDotnetSdks()
+            val sdks = dotnetManagement.findDotnetSdks()
+            _dotnetSdkFlow.value = sdks
         }
     }
 

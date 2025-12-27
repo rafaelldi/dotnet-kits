@@ -12,13 +12,13 @@ internal interface DotnetArtifact {
     val patch: Int
     val preRelease: String?
     val pathString: String
-    val installationType: InstallationType
+    val installationFolder: InstallationFolder
 }
 
 internal data class DotnetSdk(
     override val version: String,
     val path: Path,
-    override val installationType: InstallationType
+    override val installationFolder: InstallationFolder
 ) : DotnetArtifact {
     override val pathString: String = path.absolutePathString()
 
@@ -40,7 +40,7 @@ internal data class DotnetRuntime(
     val type: String,
     override val version: String,
     val path: Path,
-    override val installationType: InstallationType
+    override val installationFolder: InstallationFolder
 ) : DotnetArtifact {
     override val pathString: String = path.absolutePathString()
 
