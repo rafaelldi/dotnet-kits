@@ -3,6 +3,7 @@
 package me.rafaelldi.dotnet.kits.core.toolWindow
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -24,9 +25,11 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.PopupPositionProvider
+import com.intellij.util.ui.JBUI
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetSdk
+import org.jetbrains.jewel.bridge.toComposeColor
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.ActionButton
@@ -121,12 +124,7 @@ private fun DotnetSdkItem(
     viewModel: DotnetKitsViewModelApi,
     modifier: Modifier = Modifier
 ) {
-    val localSdkShape = RoundedCornerShape(
-        topStart = 8.dp,
-        topEnd = 8.dp,
-        bottomStart = 8.dp,
-        bottomEnd = 8.dp
-    )
+    val localSdkShape = RoundedCornerShape(8.dp)
 
     val showPopup = remember { mutableStateOf(false) }
     val popupPosition = remember { mutableStateOf(IntOffset.Zero) }
@@ -156,10 +154,8 @@ private fun DotnetSdkItem(
             modifier = Modifier
                 .wrapContentSize()
                 .fillMaxWidth()
-                .background(
-                    requireNotNull(JewelTheme.colorPalette.grayOrNull(3)),
-                    localSdkShape
-                )
+                .background(JBUI.CurrentTheme.Banner.INFO_BACKGROUND.toComposeColor(), localSdkShape)
+                .border(1.dp, JBUI.CurrentTheme.Banner.INFO_BORDER_COLOR.toComposeColor(), localSdkShape)
                 .padding(16.dp)
         ) {
             Row(
