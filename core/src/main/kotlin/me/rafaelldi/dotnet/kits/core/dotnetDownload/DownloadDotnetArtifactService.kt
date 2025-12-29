@@ -8,9 +8,9 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.diagnostic.trace
 import com.intellij.openapi.project.Project
 import com.intellij.platform.eel.EelApi
-import com.intellij.platform.eel.fs.copy
-import com.intellij.platform.eel.fs.createTemporaryFile
 import com.intellij.platform.eel.fs.createTemporaryDirectory
+import com.intellij.platform.eel.fs.createTemporaryFile
+import com.intellij.platform.eel.fs.move
 import com.intellij.platform.eel.getOrNull
 import com.intellij.platform.eel.path.EelPath
 import com.intellij.platform.eel.provider.asEelPath
@@ -303,11 +303,8 @@ internal class DownloadDotnetArtifactService(private val project: Project) {
         val sourcePath = sourceSubfolder.resolve(releaseVersion)
 
         eelApi.fs
-            .copy(sourcePath, targetPath)
-            .copyRecursively(true)
-            .followLinks(true)
-            .replaceExisting(true)
-            .eelIt()
+            .move(sourcePath, targetPath)
+            .replaceEverything()
             .getOrThrowFileSystemException()
     }
 }
