@@ -5,13 +5,9 @@ package me.rafaelldi.dotnet.kits.core.toolWindow
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,9 +31,7 @@ import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.ActionButton
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
-import org.jetbrains.jewel.ui.component.VerticallyScrollableContainer
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
-import org.jetbrains.jewel.ui.theme.colorPalette
 
 @Composable
 internal fun DotnetSdkList(viewModel: DotnetKitsViewModelApi) {
@@ -53,68 +47,18 @@ internal fun DotnetSdkList(viewModel: DotnetKitsViewModelApi) {
         Modifier
             .fillMaxWidth()
     ) {
-        DotnetSdkColumn(
-            dotnetSdks,
-            listState,
-            viewModel,
-            Modifier
-                .fillMaxSize()
-        )
-    }
-}
-
-@Composable
-private fun DotnetSdkColumn(
-    dotnetSdks: List<DotnetSdk>,
-    listState: LazyListState,
-    viewModel: DotnetKitsViewModelApi,
-    modifier: Modifier
-) {
-    Box(modifier = modifier) {
-        if (dotnetSdks.isEmpty()) {
-            EmptySdkListPlaceholder()
-        } else {
-            VerticallyScrollableContainer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .safeContentPadding(),
-                scrollState = listState,
-            ) {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    items(dotnetSdks, key = { it.pathString }) { localSdk ->
-                        DotnetSdkItem(
-                            localSdk,
-                            viewModel,
-                            Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptySdkListPlaceholder(
-    placeholderText: String = "Unable to find local .NET SDKs.",
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = placeholderText,
-            style = JewelTheme.defaultTextStyle.copy(
-                color = JewelTheme.globalColors.text.disabled,
-                fontSize = 16.sp
+        DotnetArtifactColumn(
+            artifacts = dotnetSdks,
+            listState = listState,
+            emptyPlaceholderText = "Unable to find local .NET SDKs.",
+            modifier = Modifier.fillMaxSize()
+        ) { sdk ->
+            DotnetSdkItem(
+                sdk,
+                viewModel,
+                Modifier.fillMaxWidth()
             )
-        )
+        }
     }
 }
 

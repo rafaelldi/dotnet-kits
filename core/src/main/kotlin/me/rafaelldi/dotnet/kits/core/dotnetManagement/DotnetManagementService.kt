@@ -80,7 +80,11 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
 
                 val version = line.take(spaceIndex)
                 val pathString = line.substring(spaceIndex + 2, line.length - 1)
-                val sdk = DotnetSdk(version, Path.of(pathString).resolve(version), installationFolder)
+                val sdk = DotnetSdk(
+                    version,
+                    Path.of(pathString).resolve(version),
+                    installationFolder
+                )
 
                 add(sdk)
             }
@@ -105,7 +109,12 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
                 val type = line.take(firstSpaceIndex)
                 val version = line.substring(firstSpaceIndex + 1, secondSpaceIndex)
                 val pathString = line.substring(secondSpaceIndex + 2, line.length - 1)
-                val runtime = DotnetRuntime(type, version, Path.of(pathString), installationFolder)
+                val runtime = DotnetRuntime(
+                    type,
+                    version,
+                    Path.of(pathString).resolve(version),
+                    installationFolder
+                )
 
                 add(runtime)
             }

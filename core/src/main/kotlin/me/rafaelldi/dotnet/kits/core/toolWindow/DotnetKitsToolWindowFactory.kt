@@ -24,5 +24,9 @@ internal class DotnetKitsToolWindowFactory : ToolWindowFactory, DumbAware {
         toolWindow.addComposeTab("SDKs", focusOnClickInside = true) {
             DotnetSdkList(viewModel)
         }
+
+        toolWindow.addComposeTab("Runtimes", focusOnClickInside = true) {
+            DotnetRuntimeList(viewModel)
+        }
     }
 }
