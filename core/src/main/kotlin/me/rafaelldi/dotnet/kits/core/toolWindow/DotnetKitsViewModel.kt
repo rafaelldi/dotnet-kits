@@ -16,6 +16,7 @@ internal interface DotnetKitsViewModelApi : Disposable {
     fun onReloadLocalSdks()
     fun onReloadLocalRuntimes()
     fun onDeleteSdk(dotnetSdk: DotnetSdk)
+    fun onDeleteRuntime(dotnetRuntime: DotnetRuntime)
 }
 
 internal class DotnetKitsViewModel(
@@ -55,6 +56,13 @@ internal class DotnetKitsViewModel(
             dotnetManagement.deleteSdk(dotnetSdk)
         }
         onReloadLocalSdks()
+    }
+
+    override fun onDeleteRuntime(dotnetRuntime: DotnetRuntime) {
+        viewModelScope.launch {
+            dotnetManagement.deleteRuntime(dotnetRuntime)
+        }
+        onReloadLocalRuntimes()
     }
 
     override fun dispose() {

@@ -13,21 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.isSecondaryPressed
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.*
-import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import com.intellij.util.ui.JBUI
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
-import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetSdk
 import org.jetbrains.jewel.bridge.toComposeColor
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
-import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.ActionButton
 import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
@@ -70,8 +65,7 @@ private fun DotnetSdkItem(
 ) {
     val localSdkShape = RoundedCornerShape(8.dp)
 
-    val showPopup = remember { mutableStateOf(false) }
-    val popupPosition = remember { mutableStateOf(IntOffset.Zero) }
+    val popupState = rememberPopupState()
     val itemPosition = remember { mutableStateOf(Offset.Zero) }
     val actionButtonPosition = remember { mutableStateOf(Offset.Zero) }
     val actionButtonSize = remember { mutableStateOf(IntSize.Zero) }
@@ -79,20 +73,7 @@ private fun DotnetSdkItem(
     Row(
         modifier = modifier
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .onGloballyPositioned { coordinates ->
-                itemPosition.value = coordinates.positionInWindow()
-            }
-            .onPointerEvent(PointerEventType.Press) { pointerEvent ->
-                if (!pointerEvent.buttons.isSecondaryPressed) return@onPointerEvent
-
-                val pos = itemPosition.value
-                val clickOffset = pointerEvent.changes.first().position
-                popupPosition.value = IntOffset(
-                    x = (pos.x + clickOffset.x).toInt(),
-                    y = (pos.y + clickOffset.y).toInt()
-                )
-                showPopup.value = true
-            },
+            .contextMenuHandler(popupState, itemPosition),
     ) {
         Column(
             modifier = Modifier
@@ -120,11 +101,12 @@ private fun DotnetSdkItem(
                     onClick = {
                         val pos = actionButtonPosition.value
                         val size = actionButtonSize.value
-                        popupPosition.value = IntOffset(
-                            x = pos.x.toInt(),
-                            y = (pos.y + size.height).toInt()
+                        popupState.show(
+                            IntOffset(
+                                x = pos.x.toInt(),
+                                y = (pos.y + size.height).toInt()
+                            )
                         )
-                        showPopup.value = true
                     },
                 ) {
                     Icon(
@@ -138,23 +120,13 @@ private fun DotnetSdkItem(
         }
     }
 
-    if (showPopup.value) {
-        val popupPositionProvider = remember(popupPosition.value) {
-            object : PopupPositionProvider {
-                override fun calculatePosition(
-                    anchorBounds: IntRect,
-                    windowSize: IntSize,
-                    layoutDirection: LayoutDirection,
-                    popupContentSize: IntSize
-                ): IntOffset = popupPosition.value
-            }
-        }
+    if (popupState.isVisible) {
+        val popupPositionProvider = rememberPopupPositionProvider(popupState)
 
         ContextPopupMenu(
             popupPositionProvider,
             onDismissRequest = {
-                showPopup.value = false
-                popupPosition.value = IntOffset.Zero
+                popupState.dismiss()
                 itemPosition.value = Offset.Zero
             }
         ) {
@@ -162,36 +134,10 @@ private fun DotnetSdkItem(
                 DotnetKitsCoreBundle.message("local.sdk.bubble.context.menu.delete.option"),
                 AllIconsKeys.General.Delete
             ) {
-                showPopup.value = false
+                popupState.dismiss()
                 viewModel.onDeleteSdk(dotnetSdk)
             }
         }
     }
 }
 
-@Composable
-private fun DotnetArtifactVersion(dotnetArtifact: DotnetArtifact) {
-    Text(
-        text = dotnetArtifact.version,
-        style = JewelTheme.defaultTextStyle.copy(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = JewelTheme.globalColors.text.normal,
-            lineHeight = 20.sp
-        ),
-        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
-    )
-}
-
-@Composable
-private fun DotnetArtifactPath(dotnetArtifact: DotnetArtifact) {
-    Text(
-        text = dotnetArtifact.pathString,
-        style = JewelTheme.defaultTextStyle.copy(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Normal,
-            color = JewelTheme.globalColors.text.info,
-            lineHeight = 20.sp
-        )
-    )
-}

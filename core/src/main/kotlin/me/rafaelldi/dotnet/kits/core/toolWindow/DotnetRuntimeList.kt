@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalJewelApi::class)
+@file:OptIn(ExperimentalJewelApi::class, ExperimentalComposeUiApi::class)
 
 package me.rafaelldi.dotnet.kits.core.toolWindow
 
@@ -7,21 +7,29 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.intellij.util.ui.JBUI
-import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
+import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetRuntime
 import org.jetbrains.jewel.bridge.toComposeColor
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.ui.component.ActionButton
+import org.jetbrains.jewel.ui.component.Icon
 import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
 @Composable
 internal fun DotnetRuntimeList(viewModel: DotnetKitsViewModelApi) {
@@ -45,6 +53,7 @@ internal fun DotnetRuntimeList(viewModel: DotnetKitsViewModelApi) {
         ) { runtime ->
             DotnetRuntimeItem(
                 dotnetRuntime = runtime,
+                viewModel = viewModel,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -54,12 +63,20 @@ internal fun DotnetRuntimeList(viewModel: DotnetKitsViewModelApi) {
 @Composable
 private fun DotnetRuntimeItem(
     dotnetRuntime: DotnetRuntime,
+    viewModel: DotnetKitsViewModelApi,
     modifier: Modifier = Modifier
 ) {
     val runtimeShape = RoundedCornerShape(8.dp)
 
+    val popupState = rememberPopupState()
+    val itemPosition = remember { mutableStateOf(Offset.Zero) }
+    val actionButtonPosition = remember { mutableStateOf(Offset.Zero) }
+    val actionButtonSize = remember { mutableStateOf(IntSize.Zero) }
+
     Row(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        modifier = modifier
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .contextMenuHandler(popupState, itemPosition),
     ) {
         Column(
             modifier = Modifier
@@ -69,27 +86,65 @@ private fun DotnetRuntimeItem(
                 .border(1.dp, JBUI.CurrentTheme.Banner.INFO_BORDER_COLOR.toComposeColor(), runtimeShape)
                 .padding(16.dp)
         ) {
-            DotnetArtifactVersion(dotnetRuntime)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                DotnetArtifactVersion(dotnetRuntime)
+
+                ActionButton(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color.Transparent)
+                        .onGloballyPositioned { coordinates ->
+                            actionButtonPosition.value = coordinates.positionInWindow()
+                            actionButtonSize.value = coordinates.size
+                        },
+                    tooltip = { Text("Show options") },
+                    onClick = {
+                        val pos = actionButtonPosition.value
+                        val size = actionButtonSize.value
+                        popupState.show(
+                            IntOffset(
+                                x = pos.x.toInt(),
+                                y = (pos.y + size.height).toInt()
+                            )
+                        )
+                    },
+                ) {
+                    Icon(
+                        key = AllIconsKeys.Actions.More,
+                        contentDescription = "Options",
+                        tint = Color.White
+                    )
+                }
+            }
 
             DotnetRuntimeType(dotnetRuntime)
 
             DotnetArtifactPath(dotnetRuntime)
         }
     }
-}
 
-@Composable
-private fun DotnetArtifactVersion(dotnetArtifact: DotnetArtifact) {
-    Text(
-        text = dotnetArtifact.version,
-        style = JewelTheme.defaultTextStyle.copy(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = JewelTheme.globalColors.text.normal,
-            lineHeight = 20.sp
-        ),
-        modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
-    )
+    if (popupState.isVisible) {
+        val popupPositionProvider = rememberPopupPositionProvider(popupState)
+
+        ContextPopupMenu(
+            popupPositionProvider,
+            onDismissRequest = {
+                popupState.dismiss()
+                itemPosition.value = Offset.Zero
+            }
+        ) {
+            ContextPopupMenuItem(
+                DotnetKitsCoreBundle.message("local.runtime.bubble.context.menu.delete.option"),
+                AllIconsKeys.General.Delete
+            ) {
+                popupState.dismiss()
+                viewModel.onDeleteRuntime(dotnetRuntime)
+            }
+        }
+    }
 }
 
 @Composable
@@ -103,18 +158,5 @@ private fun DotnetRuntimeType(dotnetRuntime: DotnetRuntime) {
             lineHeight = 16.sp
         ),
         modifier = Modifier.padding(bottom = 4.dp)
-    )
-}
-
-@Composable
-private fun DotnetArtifactPath(dotnetArtifact: DotnetArtifact) {
-    Text(
-        text = dotnetArtifact.pathString,
-        style = JewelTheme.defaultTextStyle.copy(
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Normal,
-            color = JewelTheme.globalColors.text.info,
-            lineHeight = 20.sp
-        )
     )
 }

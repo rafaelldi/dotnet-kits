@@ -25,6 +25,7 @@ internal interface DotnetManagementApi {
     suspend fun findDotnetSdks(): List<DotnetSdk>
     suspend fun findDotnetRuntimes(): List<DotnetRuntime>
     suspend fun deleteSdk(dotnetSdk: DotnetSdk)
+    suspend fun deleteRuntime(dotnetRuntime: DotnetRuntime)
 }
 
 @Service(Service.Level.PROJECT)
@@ -63,6 +64,9 @@ internal class DotnetManagementService(private val project: Project) : DotnetMan
     }
 
     override suspend fun deleteSdk(dotnetSdk: DotnetSdk) {
+    }
+
+    override suspend fun deleteRuntime(dotnetRuntime: DotnetRuntime) {
     }
 
     private suspend fun findDotnetSdks(
