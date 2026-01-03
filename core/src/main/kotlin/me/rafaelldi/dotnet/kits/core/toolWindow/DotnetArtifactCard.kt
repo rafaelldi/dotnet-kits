@@ -6,12 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.IntOffset
@@ -21,8 +21,7 @@ import com.intellij.util.ui.JBUI
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
 import org.jetbrains.jewel.bridge.toComposeColor
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
-import org.jetbrains.jewel.ui.component.ActionButton
-import org.jetbrains.jewel.ui.component.Icon
+import org.jetbrains.jewel.ui.component.IconActionButton
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
@@ -62,15 +61,9 @@ internal fun <T : DotnetArtifact> DotnetArtifactCard(
             ) {
                 DotnetArtifactVersion(artifact)
 
-                ActionButton(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(Color.Transparent)
-                        .onGloballyPositioned { coordinates ->
-                            actionButtonPosition.value = coordinates.positionInWindow()
-                            actionButtonSize.value = coordinates.size
-                        },
-                    tooltip = { Text("Show options") },
+                IconActionButton(
+                    key = AllIconsKeys.Actions.More,
+                    contentDescription = "Options",
                     onClick = {
                         val pos = actionButtonPosition.value
                         val size = actionButtonSize.value
@@ -81,13 +74,13 @@ internal fun <T : DotnetArtifact> DotnetArtifactCard(
                             )
                         )
                     },
-                ) {
-                    Icon(
-                        key = AllIconsKeys.Actions.More,
-                        contentDescription = "Options",
-                        tint = Color.White
-                    )
-                }
+                    modifier = Modifier
+                        .onGloballyPositioned { coordinates ->
+                            actionButtonPosition.value = coordinates.positionInWindow()
+                            actionButtonSize.value = coordinates.size
+                        },
+                    tooltip = { Text("Show options") },
+                )
             }
 
             DotnetArtifactPath(artifact)
