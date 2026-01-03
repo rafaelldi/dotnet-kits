@@ -1,21 +1,26 @@
+@file:Suppress("UnstableApiUsage")
+
 package me.rafaelldi.dotnet.kits.core.dotnetDownload
 
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.ui.dsl.builder.bindItem
+import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.builder.toNullableProperty
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
 
 internal class DownloadDotnetArtifactDialog(
-    project: Project,
+    private val project: Project,
+    dotnetBaseFolder: String,
     version: DotnetDownloadVersion,
     type: DotnetDownloadType,
     rid: DotnetDownloadRid
 ) : DialogWrapper(project) {
 
-    private val model = DownloadDotnetArtifactDialogModel(version, type, rid)
+    private val model = DownloadDotnetArtifactDialogModel(dotnetBaseFolder, version, type, rid)
 
     init {
         init()
@@ -24,6 +29,10 @@ internal class DownloadDotnetArtifactDialog(
     }
 
     override fun createCenterPanel() = panel {
+        row(DotnetKitsCoreBundle.message("dialog.download.dotnet.folder")) {
+            textFieldWithBrowseButton(FileChooserDescriptorFactory.singleDir(), project)
+                .bindText(model::dotnetBaseFolder)
+        }
         row(DotnetKitsCoreBundle.message("dialog.download.dotnet.version")) {
             comboBox(DotnetDownloadVersion.entries.toList(), SimpleListCellRenderer.create("") { it.version })
                 .bindItem(model::version.toNullableProperty())
@@ -42,6 +51,7 @@ internal class DownloadDotnetArtifactDialog(
 }
 
 internal data class DownloadDotnetArtifactDialogModel(
+    var dotnetBaseFolder: String,
     var version: DotnetDownloadVersion,
     var type: DotnetDownloadType,
     var rid: DotnetDownloadRid

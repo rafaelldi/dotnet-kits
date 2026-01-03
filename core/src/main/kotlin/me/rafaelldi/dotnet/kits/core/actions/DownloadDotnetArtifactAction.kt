@@ -1,68 +1,19 @@
 package me.rafaelldi.dotnet.kits.core.actions
 
-import com.intellij.ide.actions.RevealFileAction
-import com.intellij.notification.Notification
-import com.intellij.notification.NotificationAction
-import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.progress.currentThreadCoroutineScope
-import com.intellij.platform.ide.progress.withBackgroundProgress
 import kotlinx.coroutines.launch
-import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
-import me.rafaelldi.dotnet.kits.core.dotnetDownload.DownloadDotnetArtifactDialog
-import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetArtifactModel
-import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadRid
 import me.rafaelldi.dotnet.kits.core.dotnetDownload.DownloadDotnetArtifactService
-import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadType
-import me.rafaelldi.dotnet.kits.core.dotnetDownload.DotnetDownloadVersion
 
 internal class DownloadDotnetArtifactAction : AnAction() {
     override fun actionPerformed(actionEvent: AnActionEvent) {
         val project = actionEvent.project ?: return
 
-        val version = DotnetDownloadVersion.Version10
-        val type = DotnetDownloadType.Sdk
-        val rid = DotnetDownloadRid.LinuxX64
-
-        val dialog = DownloadDotnetArtifactDialog(project, version, type, rid)
-        if (dialog.showAndGet()) {
-            val model = dialog.getModel()
-
+        currentThreadCoroutineScope().launch {
             val service = DownloadDotnetArtifactService.getInstance(project)
-            currentThreadCoroutineScope().launch {
-                val releaseFolder =
-                    withBackgroundProgress(project, DotnetKitsCoreBundle.message("progress.download.dotnet")) {
-                        service.download(
-                            DotnetArtifactModel(model.version, model.type, model.rid)
-                        )
-                    }
-
-                releaseFolder.fold({
-                    Notification(
-                        "Dotnet Kits",
-                        DotnetKitsCoreBundle.message("notification.download.dotnet.succeeded"),
-                        "",
-                        NotificationType.INFORMATION
-                    )
-                        .addAction(object :
-                            NotificationAction(DotnetKitsCoreBundle.message("notification.download.dotnet.succeeded.action")) {
-                            override fun actionPerformed(e: AnActionEvent, notification: Notification) {
-                                RevealFileAction.openFile(it)
-                            }
-                        })
-                        .notify(project)
-                }, {
-                    Notification(
-                        "Dotnet Kits",
-                        DotnetKitsCoreBundle.message("notification.download.dotnet.failed"),
-                        it.message ?: "",
-                        NotificationType.ERROR
-                    )
-                        .notify(project)
-                })
-            }
+            service.download()
         }
     }
 

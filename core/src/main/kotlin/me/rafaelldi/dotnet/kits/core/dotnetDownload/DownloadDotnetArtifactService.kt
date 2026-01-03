@@ -2,6 +2,12 @@
 
 package me.rafaelldi.dotnet.kits.core.dotnetDownload
 
+import com.intellij.ide.actions.RevealFileAction
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationAction
+import com.intellij.notification.NotificationType
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
@@ -12,11 +18,18 @@ import com.intellij.platform.eel.fs.createTemporaryDirectory
 import com.intellij.platform.eel.fs.createTemporaryFile
 import com.intellij.platform.eel.fs.move
 import com.intellij.platform.eel.getOrNull
+import com.intellij.platform.eel.isArm64
+import com.intellij.platform.eel.isLinux
+import com.intellij.platform.eel.isMac
+import com.intellij.platform.eel.isWindows
+import com.intellij.platform.eel.isX86
+import com.intellij.platform.eel.isX86_64
 import com.intellij.platform.eel.path.EelPath
 import com.intellij.platform.eel.provider.asEelPath
 import com.intellij.platform.eel.provider.asNioPath
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.eel.provider.utils.getOrThrowFileSystemException
+import com.intellij.platform.ide.progress.withBackgroundProgress
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -25,7 +38,10 @@ import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.streams.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
 import java.nio.file.Path
 import kotlin.io.path.outputStream
 
@@ -57,25 +73,79 @@ internal class DownloadDotnetArtifactService(private val project: Project) {
     }
 
     /**
-     * Downloads the latest version of a .NET artifact to the default `.dotnet` directory in the user's home folder.
+     * Initiates an interactive download workflow for a .NET artifact.
      *
-     * This method queries the Microsoft .NET release feeds to find the latest version available for the
-     * specified .NET version channel, downloads the appropriate archive for the target platform (RID),
-     * and extracts it to the default location: `~/.dotnet/`.
-     *
-     * The artifact will be placed in the standard .NET directory structure:
-     * - SDK: `~/.dotnet/sdk/{version}/`
-     * - Runtime: `~/.dotnet/shared/Microsoft.NETCore.App/{version}/`
-     * - ASP.NET Runtime: `~/.dotnet/shared/Microsoft.AspNetCore.App/{version}/`
-     *
-     * @param model The artifact model specifying the .NET version, type (SDK/Runtime/ASP.NET Runtime),
-     *              and runtime identifier (RID) for the target platform
-     * @return A [Result] containing the [Path] to the installed artifact on success, or a failure with an exception.
+     * This method orchestrates the complete download process by:
+     * 1. Presenting a dialog to the user to select:
+     *    - .NET version (e.g., .NET 10)
+     *    - Artifact type (SDK, Runtime, or ASP.NET Core Runtime)
+     *    - Runtime identifier (RID) for the target platform
+     *    - Target installation directory
+     * 2. Downloading the selected artifact in the background with a progress indicator
+     * 3. Extracting the artifact to the appropriate subdirectory structure
+     * 4. Notifying the user of success or failure
      */
-    suspend fun download(model: DotnetArtifactModel): Result<Path> {
+    suspend fun download() {
         val eelApi = project.getEelDescriptor().toEelApi()
-        val defaultDotnetTargetFolder = eelApi.userInfo.home.resolve(".dotnet")
-        return download(model, defaultDotnetTargetFolder.asNioPath())
+
+        val model = showDialogAndGetModel(eelApi) ?: return
+
+        val releaseFolder = withBackgroundProgress(project, DotnetKitsCoreBundle.message("progress.download.dotnet")) {
+            download(
+                DotnetArtifactModel(model.version, model.type, model.rid),
+                Path.of(model.dotnetBaseFolder)
+            )
+        }
+
+        withContext(Dispatchers.EDT) {
+            releaseFolder.fold({
+                Notification(
+                    "Dotnet Kits",
+                    DotnetKitsCoreBundle.message("notification.download.dotnet.succeeded"),
+                    "",
+                    NotificationType.INFORMATION
+                )
+                    .addAction(object :
+                        NotificationAction(DotnetKitsCoreBundle.message("notification.download.dotnet.succeeded.action")) {
+                        override fun actionPerformed(e: AnActionEvent, notification: Notification) {
+                            RevealFileAction.openFile(it)
+                        }
+                    })
+                    .notify(project)
+            }, {
+                Notification(
+                    "Dotnet Kits",
+                    DotnetKitsCoreBundle.message("notification.download.dotnet.failed"),
+                    it.message ?: "",
+                    NotificationType.ERROR
+                )
+                    .notify(project)
+            })
+        }
+    }
+
+    private suspend fun showDialogAndGetModel(eelApi: EelApi): DownloadDotnetArtifactDialogModel? {
+        val version = DotnetDownloadVersion.Version10
+        val type = DotnetDownloadType.Sdk
+        val rid = when {
+            eelApi.platform.isLinux && (eelApi.platform.isX86_64 || eelApi.platform.isX86) -> DotnetDownloadRid.LinuxX64
+            eelApi.platform.isLinux && eelApi.platform.isArm64 -> DotnetDownloadRid.LinuxArm64
+            eelApi.platform.isWindows && (eelApi.platform.isX86_64 || eelApi.platform.isX86) -> DotnetDownloadRid.WinX64
+            eelApi.platform.isWindows && eelApi.platform.isArm64 -> DotnetDownloadRid.WinArm64
+            eelApi.platform.isMac && (eelApi.platform.isX86_64 || eelApi.platform.isX86) -> DotnetDownloadRid.MacOsX64
+            eelApi.platform.isMac && eelApi.platform.isArm64 -> DotnetDownloadRid.MacOsArm64
+            else -> null
+        }
+
+        if (rid == null) return null
+
+        val dotnetBaseFolder = eelApi.userInfo.home.resolve(".dotnet")
+
+        return withContext(Dispatchers.EDT) {
+            val dialog = DownloadDotnetArtifactDialog(project, dotnetBaseFolder.toString(), version, type, rid)
+            val result = dialog.showAndGet()
+            if (result) dialog.getModel() else null
+        }
     }
 
     /**
@@ -96,7 +166,7 @@ internal class DownloadDotnetArtifactService(private val project: Project) {
      *                     placed in appropriate subdirectories based on its type.
      * @return A [Result] containing the [Path] to the installed artifact on success, or a failure with an exception.
      */
-    suspend fun download(model: DotnetArtifactModel, targetFolder: Path): Result<Path> {
+    private suspend fun download(model: DotnetArtifactModel, targetFolder: Path): Result<Path> {
         try {
             val eelApi = project.getEelDescriptor().toEelApi()
 
