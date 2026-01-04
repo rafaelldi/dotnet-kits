@@ -4,9 +4,12 @@ package me.rafaelldi.dotnet.kits.core.toolWindow
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -16,17 +19,22 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
-import com.intellij.util.ui.JBUI
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
-import org.jetbrains.jewel.bridge.toComposeColor
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.ui.component.IconActionButton
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.icons.AllIconsKeys
 
 /**
- * Generic card component for displaying .NET artifacts with context menu support.
+ * Generic card component for displaying .NET artifacts with interactive states.
+ *
+ * Supports hover and selection states following IntelliJ Platform UI conventions.
+ * Selection state overrides hover state when both are active.
+ *
+ * @param artifact The artifact to display
+ * @param deleteMenuText Text for the delete context menu option
+ * @param onDelete Callback invoked when delete is selected
+ * @param modifier Modifier for the card container
  */
 @Composable
 internal fun <T : DotnetArtifact> DotnetArtifactCard(
@@ -35,25 +43,39 @@ internal fun <T : DotnetArtifact> DotnetArtifactCard(
     onDelete: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val cardShape = RoundedCornerShape(8.dp)
-
     val popupState = rememberPopupState()
     val itemPosition = remember { mutableStateOf(Offset.Zero) }
     val actionButtonPosition = remember { mutableStateOf(Offset.Zero) }
     val actionButtonSize = remember { mutableStateOf(IntSize.Zero) }
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+
+    val backgroundColor = when {
+        isHovered -> DotnetKitsTheme.Colors.cardHoverBackground()
+        else -> DotnetKitsTheme.Colors.cardBackground()
+    }
+
     Row(
         modifier = modifier
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(
+                horizontal = DotnetKitsTheme.Spacing.cardPaddingHorizontal,
+                vertical = DotnetKitsTheme.Spacing.cardPaddingVertical
+            )
             .contextMenuHandler(popupState, itemPosition),
     ) {
         Column(
             modifier = Modifier
                 .wrapContentSize()
                 .fillMaxWidth()
-                .background(JBUI.CurrentTheme.Banner.INFO_BACKGROUND.toComposeColor(), cardShape)
-                .border(1.dp, JBUI.CurrentTheme.Banner.INFO_BORDER_COLOR.toComposeColor(), cardShape)
-                .padding(16.dp)
+                .hoverable(interactionSource = interactionSource)
+                .background(backgroundColor, DotnetKitsTheme.Shapes.cardShape)
+                .border(
+                    DotnetKitsTheme.Sizes.borderWidthDefault,
+                    DotnetKitsTheme.Colors.cardBorder(),
+                    DotnetKitsTheme.Shapes.cardShape
+                )
+                .padding(DotnetKitsTheme.Spacing.cardInnerPadding)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -79,7 +101,12 @@ internal fun <T : DotnetArtifact> DotnetArtifactCard(
                             actionButtonPosition.value = coordinates.positionInWindow()
                             actionButtonSize.value = coordinates.size
                         },
-                    tooltip = { Text("Show options") },
+                    tooltip = {
+                        Text(
+                            "Show options",
+                            style = DotnetKitsTheme.Typography.tooltipStyle()
+                        )
+                    },
                 )
             }
 

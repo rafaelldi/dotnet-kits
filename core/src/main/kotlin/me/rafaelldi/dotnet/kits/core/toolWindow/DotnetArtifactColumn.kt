@@ -9,11 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
-import org.jetbrains.jewel.foundation.theme.JewelTheme
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.VerticallyScrollableContainer
 
@@ -38,8 +35,8 @@ internal fun <T : DotnetArtifact> DotnetArtifactColumn(
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    contentPadding = PaddingValues(vertical = DotnetKitsTheme.Spacing.listContentPadding),
+                    verticalArrangement = Arrangement.spacedBy(DotnetKitsTheme.Spacing.itemSpacing)
                 ) {
                     items(artifacts, key = { it.pathString }) { artifact ->
                         itemContent(artifact)
@@ -61,10 +58,7 @@ private fun EmptyArtifactListPlaceholder(
     ) {
         Text(
             text = placeholderText,
-            style = JewelTheme.defaultTextStyle.copy(
-                color = JewelTheme.globalColors.text.disabled,
-                fontSize = 16.sp
-            )
+            style = DotnetKitsTheme.Typography.emptyStateStyle()
         )
     }
 }
