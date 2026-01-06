@@ -33,7 +33,7 @@ internal class DownloadDotnetArtifactAction : AnAction() {
                 if (result) dialog.getModel() else null
             } ?: return@launch
 
-            val releaseFolder =  withBackgroundProgress(project, DotnetKitsFrontendBundle.message("progress.download.dotnet")) {
+            val releaseFolder = withBackgroundProgress(project, DotnetKitsFrontendBundle.message("progress.download.dotnet")) {
                 service.download(model)
             }
             showResultNotification(releaseFolder, project)

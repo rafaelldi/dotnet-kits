@@ -16,8 +16,11 @@
     </extensions>
 
     <actions>
-        <action id="Dotnet.Kits.Receive"
+        <action id="Dotnet.Artifact.Download"
                 class="me.rafaelldi.dotnet.kits.frontend.actions.DownloadDotnetArtifactAction"
+                icon="AllIcons.Actions.Download"/>
+        <action id="Omnisharp.Release.Download"
+                class="me.rafaelldi.dotnet.kits.frontend.actions.DownloadOmnisharpReleaseAction"
                 icon="AllIcons.Actions.Download"/>
     </actions>
 </idea-plugin>
