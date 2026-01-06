@@ -17,7 +17,6 @@ import com.intellij.platform.eel.provider.asNioPath
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.eel.provider.utils.awaitProcessResult
 import com.intellij.platform.eel.provider.utils.stdoutString
-import com.intellij.util.PathUtil
 import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
 import kotlin.io.path.exists
