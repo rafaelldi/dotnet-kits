@@ -2,7 +2,6 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-import org.jetbrains.intellij.platform.gradle.extensions.excludeCoroutines
 
 plugins {
     alias(libs.plugins.kotlin)
@@ -32,6 +31,7 @@ dependencies {
         }
 
         pluginModule(implementation(project(":core")))
+        pluginModule(implementation(project(":frontend")))
 
         testFramework(TestFrameworkType.Platform)
     }

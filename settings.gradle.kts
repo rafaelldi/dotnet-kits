@@ -4,4 +4,4 @@ plugins {
 
 rootProject.name = "dotnet.kits"
 
-include("core")
+include("core", "frontend")

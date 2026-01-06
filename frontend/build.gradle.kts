@@ -1,9 +1,6 @@
-import org.jetbrains.intellij.platform.gradle.extensions.excludeCoroutines
-
 plugins {
     id("org.jetbrains.intellij.platform.module")
     alias(libs.plugins.kotlin)
-    alias(libs.plugins.serialization)
     alias(libs.plugins.composeCompiler)
 }
 
@@ -31,18 +28,9 @@ dependencies {
             useCache = true
         }
 
+        implementation(project(":core"))
+
         @Suppress("UnstableApiUsage")
         composeUI()
-    }
-
-    implementation(libs.serializationJson)
-    implementation(libs.ktorCio) {
-        excludeCoroutines()
-    }
-    implementation(libs.ktorContentNegotiation) {
-        excludeCoroutines()
-    }
-    implementation(libs.ktorJson) {
-        excludeCoroutines()
     }
 }
