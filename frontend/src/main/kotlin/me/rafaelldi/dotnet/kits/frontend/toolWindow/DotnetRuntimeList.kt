@@ -11,8 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetRuntime
-import me.rafaelldi.dotnet.kits.frontend.DotnetKitsFrontendBundle
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 
 @Composable
@@ -35,25 +33,12 @@ internal fun DotnetRuntimeList(viewModel: DotnetKitsViewModelApi) {
             emptyPlaceholderText = "Unable to find local .NET Runtimes.",
             modifier = Modifier.fillMaxSize()
         ) { runtime ->
-            DotnetRuntimeItem(
-                dotnetRuntime = runtime,
-                viewModel = viewModel,
+            DotnetArtifactCard(
+                artifact = runtime,
+                onOpenFolder = { viewModel.onOpenArtifactFolder(it) },
+                onDeleteFolder = { viewModel.onDeleteArtifactFolder(it) },
                 modifier = Modifier.fillMaxWidth()
             )
         }
     }
-}
-
-@Composable
-private fun DotnetRuntimeItem(
-    dotnetRuntime: DotnetRuntime,
-    viewModel: DotnetKitsViewModelApi,
-    modifier: Modifier = Modifier
-) {
-    DotnetArtifactCard(
-        artifact = dotnetRuntime,
-        deleteMenuText = DotnetKitsFrontendBundle.message("local.runtime.bubble.context.menu.delete.option"),
-        onDelete = { viewModel.onDeleteRuntime(it) },
-        modifier = modifier
-    )
 }

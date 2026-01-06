@@ -11,8 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetSdk
-import me.rafaelldi.dotnet.kits.frontend.DotnetKitsFrontendBundle
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 
 @Composable
@@ -35,25 +33,12 @@ internal fun DotnetSdkList(viewModel: DotnetKitsViewModelApi) {
             emptyPlaceholderText = "Unable to find local .NET SDKs.",
             modifier = Modifier.fillMaxSize()
         ) { sdk ->
-            DotnetSdkItem(
-                sdk,
-                viewModel,
-                Modifier.fillMaxWidth()
+            DotnetArtifactCard(
+                artifact = sdk,
+                onOpenFolder = { viewModel.onOpenArtifactFolder(it) },
+                onDeleteFolder = { viewModel.onDeleteArtifactFolder(it) },
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
-}
-
-@Composable
-private fun DotnetSdkItem(
-    dotnetSdk: DotnetSdk,
-    viewModel: DotnetKitsViewModelApi,
-    modifier: Modifier = Modifier
-) {
-    DotnetArtifactCard(
-        artifact = dotnetSdk,
-        deleteMenuText = DotnetKitsFrontendBundle.message("local.sdk.bubble.context.menu.delete.option"),
-        onDelete = { viewModel.onDeleteSdk(it) },
-        modifier = modifier
-    )
 }

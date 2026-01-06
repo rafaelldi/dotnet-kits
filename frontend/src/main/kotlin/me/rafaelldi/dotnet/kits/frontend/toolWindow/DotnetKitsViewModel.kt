@@ -4,8 +4,11 @@ import com.intellij.openapi.Disposable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetManagementApi
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetRuntime
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetSdk
@@ -15,8 +18,8 @@ internal interface DotnetKitsViewModelApi : Disposable {
     val dotnetRuntimeFlow: StateFlow<List<DotnetRuntime>>
     fun onReloadLocalSdks()
     fun onReloadLocalRuntimes()
-    fun onDeleteSdk(dotnetSdk: DotnetSdk)
-    fun onDeleteRuntime(dotnetRuntime: DotnetRuntime)
+    fun onOpenArtifactFolder(artifact: DotnetArtifact)
+    fun onDeleteArtifactFolder(artifact: DotnetArtifact)
 }
 
 internal class DotnetKitsViewModel(
@@ -51,18 +54,20 @@ internal class DotnetKitsViewModel(
         }
     }
 
-    override fun onDeleteSdk(dotnetSdk: DotnetSdk) {
+    override fun onOpenArtifactFolder(artifact: DotnetArtifact) {
         viewModelScope.launch {
-            dotnetManagement.deleteSdk(dotnetSdk)
+            dotnetManagement.openArtifactFolder(artifact)
         }
-        onReloadLocalSdks()
     }
 
-    override fun onDeleteRuntime(dotnetRuntime: DotnetRuntime) {
+    override fun onDeleteArtifactFolder(artifact: DotnetArtifact) {
         viewModelScope.launch {
-            dotnetManagement.deleteRuntime(dotnetRuntime)
+            dotnetManagement.deleteArtifactFolder(artifact)
         }
-        onReloadLocalRuntimes()
+        when (artifact) {
+            is DotnetSdk -> onReloadLocalSdks()
+            is DotnetRuntime -> onReloadLocalRuntimes()
+        }
     }
 
     override fun dispose() {

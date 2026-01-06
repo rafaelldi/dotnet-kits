@@ -2,6 +2,7 @@
 
 package me.rafaelldi.dotnet.kits.core.dotnetManagement
 
+import com.intellij.ide.actions.RevealFileAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
@@ -16,6 +17,7 @@ import com.intellij.platform.eel.provider.asNioPath
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.eel.provider.utils.awaitProcessResult
 import com.intellij.platform.eel.provider.utils.stdoutString
+import com.intellij.util.PathUtil
 import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -26,8 +28,8 @@ import kotlin.io.path.listDirectoryEntries
 interface DotnetManagementApi {
     suspend fun findDotnetSdks(): List<DotnetSdk>
     suspend fun findDotnetRuntimes(): List<DotnetRuntime>
-    suspend fun deleteSdk(dotnetSdk: DotnetSdk)
-    suspend fun deleteRuntime(dotnetRuntime: DotnetRuntime)
+    suspend fun openArtifactFolder(artifact: DotnetArtifact)
+    suspend fun deleteArtifactFolder(dotnetArtifact: DotnetArtifact)
 }
 
 @Service(Service.Level.PROJECT)
@@ -66,10 +68,14 @@ class DotnetManagementService(private val project: Project) : DotnetManagementAp
         }.sortedWith(compareBy({ it.major }, { it.minor }, { it.patch }, { it.preRelease }))
     }
 
-    override suspend fun deleteSdk(dotnetSdk: DotnetSdk) {
+    override suspend fun openArtifactFolder(artifact: DotnetArtifact) {
+        RevealFileAction.openDirectory(artifact.path)
     }
 
-    override suspend fun deleteRuntime(dotnetRuntime: DotnetRuntime) {
+    override suspend fun deleteArtifactFolder(dotnetArtifact: DotnetArtifact) {
+        val eelApi = project.getEelDescriptor().toEelApi()
+        val artifactFolder = dotnetArtifact.path.asEelPath()
+        eelApi.fs.delete(artifactFolder, true)
     }
 
     private suspend fun findDotnetSdks(

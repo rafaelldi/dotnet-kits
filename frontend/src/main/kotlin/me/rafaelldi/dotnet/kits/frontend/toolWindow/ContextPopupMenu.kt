@@ -25,7 +25,9 @@ internal fun ContextPopupMenu(
         onDismissRequest = { onDismissRequest() },
         horizontalAlignment = Alignment.Start
     ) {
-        content()
+        Column {
+            content()
+        }
     }
 }
 

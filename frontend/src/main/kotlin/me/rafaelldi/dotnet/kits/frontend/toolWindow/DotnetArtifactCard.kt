@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
+import me.rafaelldi.dotnet.kits.frontend.DotnetKitsFrontendBundle
 import me.rafaelldi.dotnet.kits.frontend.common.DotnetKitsTheme
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.ui.component.IconActionButton
@@ -30,15 +31,14 @@ import org.jetbrains.jewel.ui.icons.AllIconsKeys
  * Generic card component for displaying .NET artifacts with interactive states.
  *
  * @param artifact The artifact to display
- * @param deleteMenuText Text for the delete context menu option
- * @param onDelete Callback invoked when delete is selected
+ * @param onDeleteFolder Callback invoked when delete folder is selected
  * @param modifier Modifier for the card container
  */
 @Composable
 internal fun <T : DotnetArtifact> DotnetArtifactCard(
     artifact: T,
-    deleteMenuText: String,
-    onDelete: (T) -> Unit,
+    onOpenFolder: (T) -> Unit,
+    onDeleteFolder: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val popupState = rememberPopupState()
@@ -123,11 +123,19 @@ internal fun <T : DotnetArtifact> DotnetArtifactCard(
             }
         ) {
             ContextPopupMenuItem(
-                deleteMenuText,
+                DotnetKitsFrontendBundle.message("local.artifact.context.menu.open.folder"),
+                AllIconsKeys.Actions.MenuOpen
+            ) {
+                popupState.dismiss()
+                onOpenFolder(artifact)
+            }
+
+            ContextPopupMenuItem(
+                DotnetKitsFrontendBundle.message("local.artifact.context.menu.delete.folder"),
                 AllIconsKeys.General.Delete
             ) {
                 popupState.dismiss()
-                onDelete(artifact)
+                onDeleteFolder(artifact)
             }
         }
     }
