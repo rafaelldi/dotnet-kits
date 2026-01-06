@@ -1,6 +1,4 @@
-@file:OptIn(ExperimentalJewelApi::class)
-
-package me.rafaelldi.dotnet.kits.frontend.toolWindow
+package me.rafaelldi.dotnet.kits.frontend.common
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -11,7 +9,6 @@ import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import org.jetbrains.jewel.bridge.toComposeColor
-import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.foundation.theme.JewelTheme
 
 /**
@@ -84,10 +81,10 @@ object DotnetKitsTheme {
          * Bold, normal-sized text in the default text color.
          */
         @Composable
-        fun artifactVersionStyle() = JewelTheme.defaultTextStyle.copy(
+        fun artifactVersionStyle() = JewelTheme.Companion.defaultTextStyle.copy(
             fontSize = bodyFontSize,
-            fontWeight = FontWeight.Bold,
-            color = JewelTheme.globalColors.text.normal,
+            fontWeight = FontWeight.Companion.Bold,
+            color = JewelTheme.Companion.globalColors.text.normal,
             lineHeight = lineHeightNormal
         )
 
@@ -97,10 +94,10 @@ object DotnetKitsTheme {
          * Normal weight, normal-sized text in an info color to de-emphasize.
          */
         @Composable
-        fun artifactPathStyle() = JewelTheme.defaultTextStyle.copy(
+        fun artifactPathStyle() = JewelTheme.Companion.defaultTextStyle.copy(
             fontSize = bodyFontSize,
-            fontWeight = FontWeight.Normal,
-            color = JewelTheme.globalColors.text.info,
+            fontWeight = FontWeight.Companion.Normal,
+            color = JewelTheme.Companion.globalColors.text.info,
             lineHeight = lineHeightNormal
         )
 
@@ -110,9 +107,9 @@ object DotnetKitsTheme {
          * Slightly larger text in a disabled color to indicate inactive state.
          */
         @Composable
-        fun emptyStateStyle() = JewelTheme.defaultTextStyle.copy(
+        fun emptyStateStyle() = JewelTheme.Companion.defaultTextStyle.copy(
             fontSize = titleFontSize,
-            color = JewelTheme.globalColors.text.disabled
+            color = JewelTheme.Companion.globalColors.text.disabled
         )
 
         /**
@@ -123,7 +120,7 @@ object DotnetKitsTheme {
          * hierarchy for supplementary tooltip text.
          */
         @Composable
-        fun tooltipStyle() = JewelTheme.defaultTextStyle.copy(
+        fun tooltipStyle() = JewelTheme.Companion.defaultTextStyle.copy(
             fontSize = captionFontSize,
             color = JBUI.CurrentTheme.Tooltip.foreground().toComposeColor()
         )

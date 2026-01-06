@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetArtifact
+import me.rafaelldi.dotnet.kits.frontend.common.DotnetKitsTheme
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 import org.jetbrains.jewel.ui.component.IconActionButton
 import org.jetbrains.jewel.ui.component.Text
