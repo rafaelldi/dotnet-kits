@@ -2,6 +2,7 @@
     <resource-bundle>messages.DotnetKitsFrontendBundle</resource-bundle>
 
     <dependencies>
+        <module name="dotnet.kits.core"/>
         <module name="intellij.platform.frontend"/>
         <module name="intellij.platform.compose"/>
     </dependencies>
