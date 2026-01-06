@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.kits.core.toolWindow
+package me.rafaelldi.dotnet.kits.frontend.toolWindow
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.IntOffset

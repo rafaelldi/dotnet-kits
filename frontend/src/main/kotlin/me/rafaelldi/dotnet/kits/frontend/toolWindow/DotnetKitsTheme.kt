@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalJewelApi::class)
 
-package me.rafaelldi.dotnet.kits.core.toolWindow
+package me.rafaelldi.dotnet.kits.frontend.toolWindow
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable

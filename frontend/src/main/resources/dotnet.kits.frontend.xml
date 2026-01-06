@@ -1,3 +1,21 @@
 <idea-plugin>
     <resource-bundle>messages.DotnetKitsFrontendBundle</resource-bundle>
+
+    <dependencies>
+        <module name="intellij.platform.compose"/>
+    </dependencies>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow factoryClass="me.rafaelldi.dotnet.kits.frontend.toolWindow.DotnetKitsToolWindowFactory"
+                    id="Dotnet Kits"
+                    icon="me.rafaelldi.dotnet.kits.core.DotnetKitsCoreIcons.Dotnet"
+                    anchor="right"
+                    doNotActivateOnStart="true"/>
+    </extensions>
+
+    <actions>
+        <action id="Dotnet.Kits.Receive"
+                class="me.rafaelldi.dotnet.kits.frontend.actions.DownloadDotnetArtifactAction"
+                icon="AllIcons.Actions.Download"/>
+    </actions>
 </idea-plugin>

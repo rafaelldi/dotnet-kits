@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.kits.core.toolWindow
+package me.rafaelldi.dotnet.kits.frontend.toolWindow
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware

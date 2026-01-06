@@ -1,6 +1,9 @@
 package me.rafaelldi.dotnet.kits.core.dotnetManagement
 
-internal enum class InstallationFolder {
+import org.jetbrains.annotations.ApiStatus
+
+@ApiStatus.Internal
+enum class InstallationFolder {
     Default,
     Manual,
     Rider

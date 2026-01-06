@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalJewelApi::class)
 
-package me.rafaelldi.dotnet.kits.core.toolWindow
+package me.rafaelldi.dotnet.kits.frontend.toolWindow
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,18 +11,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
-import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetSdk
+import me.rafaelldi.dotnet.kits.core.dotnetManagement.DotnetRuntime
+import me.rafaelldi.dotnet.kits.frontend.DotnetKitsFrontendBundle
 import org.jetbrains.jewel.foundation.ExperimentalJewelApi
 
 @Composable
-internal fun DotnetSdkList(viewModel: DotnetKitsViewModelApi) {
-    val dotnetSdks by viewModel.dotnetSdkFlow.collectAsState(emptyList())
+internal fun DotnetRuntimeList(viewModel: DotnetKitsViewModelApi) {
+    val dotnetRuntimes by viewModel.dotnetRuntimeFlow.collectAsState(emptyList())
 
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) {
-        viewModel.onReloadLocalSdks()
+        viewModel.onReloadLocalRuntimes()
     }
 
     Column(
@@ -30,30 +30,30 @@ internal fun DotnetSdkList(viewModel: DotnetKitsViewModelApi) {
             .fillMaxWidth()
     ) {
         DotnetArtifactColumn(
-            artifacts = dotnetSdks,
+            artifacts = dotnetRuntimes,
             listState = listState,
-            emptyPlaceholderText = "Unable to find local .NET SDKs.",
+            emptyPlaceholderText = "Unable to find local .NET Runtimes.",
             modifier = Modifier.fillMaxSize()
-        ) { sdk ->
-            DotnetSdkItem(
-                sdk,
-                viewModel,
-                Modifier.fillMaxWidth()
+        ) { runtime ->
+            DotnetRuntimeItem(
+                dotnetRuntime = runtime,
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
 }
 
 @Composable
-private fun DotnetSdkItem(
-    dotnetSdk: DotnetSdk,
+private fun DotnetRuntimeItem(
+    dotnetRuntime: DotnetRuntime,
     viewModel: DotnetKitsViewModelApi,
     modifier: Modifier = Modifier
 ) {
     DotnetArtifactCard(
-        artifact = dotnetSdk,
-        deleteMenuText = DotnetKitsCoreBundle.message("local.sdk.bubble.context.menu.delete.option"),
-        onDelete = { viewModel.onDeleteSdk(it) },
+        artifact = dotnetRuntime,
+        deleteMenuText = DotnetKitsFrontendBundle.message("local.runtime.bubble.context.menu.delete.option"),
+        onDelete = { viewModel.onDeleteRuntime(it) },
         modifier = modifier
     )
 }

@@ -1,4 +1,4 @@
-package me.rafaelldi.dotnet.kits.core.actions
+package me.rafaelldi.dotnet.kits.frontend.actions
 
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction

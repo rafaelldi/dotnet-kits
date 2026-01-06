@@ -2,10 +2,12 @@ package me.rafaelldi.dotnet.kits.core.dotnetManagement
 
 import me.rafaelldi.dotnet.kits.core.util.extractPreRelease
 import me.rafaelldi.dotnet.kits.core.util.parseSemanticVersion
+import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
-internal interface DotnetArtifact {
+@ApiStatus.Internal
+interface DotnetArtifact {
     val version: String
     val major: Int
     val minor: Int
@@ -15,7 +17,8 @@ internal interface DotnetArtifact {
     val installationFolder: InstallationFolder
 }
 
-internal data class DotnetSdk(
+@ApiStatus.Internal
+data class DotnetSdk(
     override val version: String,
     val path: Path,
     override val installationFolder: InstallationFolder
@@ -36,7 +39,8 @@ internal data class DotnetSdk(
     }
 }
 
-internal data class DotnetRuntime(
+@ApiStatus.Internal
+data class DotnetRuntime(
     val type: String,
     override val version: String,
     val path: Path,

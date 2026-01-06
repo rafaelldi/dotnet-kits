@@ -16,12 +16,14 @@ import com.intellij.platform.eel.provider.asNioPath
 import com.intellij.platform.eel.provider.getEelDescriptor
 import com.intellij.platform.eel.provider.utils.awaitProcessResult
 import com.intellij.platform.eel.provider.utils.stdoutString
+import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 
-internal interface DotnetManagementApi {
+@ApiStatus.Internal
+interface DotnetManagementApi {
     suspend fun findDotnetSdks(): List<DotnetSdk>
     suspend fun findDotnetRuntimes(): List<DotnetRuntime>
     suspend fun deleteSdk(dotnetSdk: DotnetSdk)
@@ -29,9 +31,10 @@ internal interface DotnetManagementApi {
 }
 
 @Service(Service.Level.PROJECT)
-internal class DotnetManagementService(private val project: Project) : DotnetManagementApi {
+@ApiStatus.Internal
+class DotnetManagementService(private val project: Project) : DotnetManagementApi {
     companion object {
-        internal fun getInstance(project: Project): DotnetManagementService = project.service()
+        fun getInstance(project: Project): DotnetManagementService = project.service()
 
         private val LOG = logger<DotnetManagementService>()
 

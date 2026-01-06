@@ -42,6 +42,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import me.rafaelldi.dotnet.kits.core.DotnetKitsCoreBundle
+import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
 import kotlin.io.path.outputStream
 
@@ -53,8 +54,9 @@ import kotlin.io.path.outputStream
  * - .NET Runtime
  * - ASP.NET Core Runtime
  */
+@ApiStatus.Internal
 @Service(Service.Level.PROJECT)
-internal class DownloadDotnetArtifactService(private val project: Project) {
+class DownloadDotnetArtifactService(private val project: Project) {
     companion object {
         fun getInstance(project: Project): DownloadDotnetArtifactService = project.service()
 
