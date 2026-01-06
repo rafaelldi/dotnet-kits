@@ -28,6 +28,8 @@ dependencies {
             useCache = true
         }
 
+        bundledModule("intellij.platform.frontend")
+
         implementation(project(":core"))
 
         @Suppress("UnstableApiUsage")

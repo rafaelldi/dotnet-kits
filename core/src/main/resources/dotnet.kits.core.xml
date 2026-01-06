@@ -1,5 +1,5 @@
 <idea-plugin>
-    <resource-bundle>messages.DotnetKitsCoreBundle</resource-bundle>
-
-
+    <dependencies>
+        <module name="intellij.platform.backend"/>
+    </dependencies>
 </idea-plugin>

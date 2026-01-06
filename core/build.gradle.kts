@@ -4,7 +4,6 @@ plugins {
     id("org.jetbrains.intellij.platform.module")
     alias(libs.plugins.kotlin)
     alias(libs.plugins.serialization)
-    alias(libs.plugins.composeCompiler)
 }
 
 kotlin {
@@ -31,8 +30,7 @@ dependencies {
             useCache = true
         }
 
-        @Suppress("UnstableApiUsage")
-        composeUI()
+        bundledModule("intellij.platform.backend")
     }
 
     implementation(libs.serializationJson)
