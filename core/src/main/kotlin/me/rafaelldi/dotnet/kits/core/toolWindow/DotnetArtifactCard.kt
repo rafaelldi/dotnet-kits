@@ -28,9 +28,6 @@ import org.jetbrains.jewel.ui.icons.AllIconsKeys
 /**
  * Generic card component for displaying .NET artifacts with interactive states.
  *
- * Supports hover and selection states following IntelliJ Platform UI conventions.
- * Selection state overrides hover state when both are active.
- *
  * @param artifact The artifact to display
  * @param deleteMenuText Text for the delete context menu option
  * @param onDelete Callback invoked when delete is selected
