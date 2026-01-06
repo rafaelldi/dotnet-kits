@@ -6,13 +6,11 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.platform.util.coroutines.childScope
 import kotlinx.coroutines.CoroutineScope
-import org.jetbrains.annotations.ApiStatus
 
 @Service(Level.PROJECT)
-@ApiStatus.Internal
-class DotnetKitsService(private val scope: CoroutineScope) {
+internal class DotnetKitsCoreService(private val scope: CoroutineScope) {
     companion object {
-        fun getInstance(project: Project): DotnetKitsService = project.service()
+        fun getInstance(project: Project): DotnetKitsCoreService = project.service()
     }
 
     @Suppress("UnstableApiUsage")
