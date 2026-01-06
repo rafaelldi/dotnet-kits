@@ -1,7 +1,9 @@
 package me.rafaelldi.dotnet.kits.core.dotnetDownload
 
+import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
 
+@ApiStatus.Internal
 data class DotnetArtifactModel(
     val dotnetBaseFolder: Path,
     val version: DotnetDownloadVersion,
@@ -9,6 +11,7 @@ data class DotnetArtifactModel(
     val rid: DotnetDownloadRid
 )
 
+@ApiStatus.Internal
 enum class DotnetDownloadVersion(val version: String) {
     Version10("10.0"),
     Version9("9.0"),
@@ -18,12 +21,14 @@ enum class DotnetDownloadVersion(val version: String) {
     Version5("5.0")
 }
 
+@ApiStatus.Internal
 enum class DotnetDownloadType(val id: String) {
     Sdk("dotnet-sdk"),
     Runtime("dotnet-runtime"),
     AspNetRuntime("aspnetcore-runtime")
 }
 
+@ApiStatus.Internal
 enum class DotnetDownloadRid(val id: String, val fileExtension: String) {
     LinuxX64("linux-x64", ".tar.gz"),
     LinuxArm64("linux-arm64", ".tar.gz"),
