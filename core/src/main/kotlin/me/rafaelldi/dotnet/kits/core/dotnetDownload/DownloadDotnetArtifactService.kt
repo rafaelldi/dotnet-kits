@@ -8,14 +8,11 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.diagnostic.trace
 import com.intellij.openapi.project.Project
 import com.intellij.platform.eel.*
-import com.intellij.platform.eel.fs.createTemporaryDirectory
-import com.intellij.platform.eel.fs.createTemporaryFile
-import com.intellij.platform.eel.fs.move
+import com.intellij.platform.eel.fs.EelFileSystemApi
 import com.intellij.platform.eel.path.EelPath
 import com.intellij.platform.eel.provider.asEelPath
 import com.intellij.platform.eel.provider.asNioPath
 import com.intellij.platform.eel.provider.getEelDescriptor
-import com.intellij.platform.eel.provider.utils.getOrThrowFileSystemException
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -23,11 +20,10 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.*
-import io.ktor.utils.io.streams.*
 import kotlinx.serialization.json.Json
+import me.rafaelldi.dotnet.kits.core.util.DownloadArchiveService
 import org.jetbrains.annotations.ApiStatus
 import java.nio.file.Path
-import kotlin.io.path.outputStream
 
 /**
  * Service responsible for downloading .NET artifacts from the official Microsoft .NET release feeds.
@@ -121,15 +117,24 @@ class DownloadDotnetArtifactService(private val project: Project) {
                 return Result.failure(IllegalStateException("Release version $versionToDownload already exists at target path, skipping downloading"))
             }
 
-            val downloadedArchive = downloadReleaseArchive(model, latestRelease, eelApi)
-            if (downloadedArchive == null) {
-                LOG.warn("Unable to download dotnet release archive for model: $model")
-                return Result.failure(IllegalStateException("Unable to download dotnet release archive"))
+            val downloadUrl = getDownloadUrl(model, latestRelease)
+            if (downloadUrl == null) {
+                LOG.warn("Unable to find download URL for model: $model")
+                return Result.failure(IllegalStateException("Unable to find download URL for dotnet release"))
             }
 
-            unpackReleaseArchive(downloadedArchive, versionToDownload, model.type, targetPath, eelApi)
+            val downloadArchiveService = DownloadArchiveService.getInstance(project)
+            val result = downloadArchiveService.downloadArchive(
+                downloadFilePrefix = "dotnet-kits",
+                downloadFileExtension = model.rid.fileExtension,
+                downloadUrl = downloadUrl,
+                selectPathFromArchive = { archiveDir: EelPath, fs: EelFileSystemApi ->
+                    selectDotnetPathFromArchive(archiveDir, fs, versionToDownload, model.type)
+                },
+                targetPath = targetPath
+            )
 
-            return Result.success(targetPath.asNioPath())
+            return result
         } catch (ce: CancellationException) {
             throw ce
         } catch (e: Exception) {
@@ -216,16 +221,13 @@ class DownloadDotnetArtifactService(private val project: Project) {
                 .resolve(releaseVersion)
         }
 
-    private suspend fun downloadReleaseArchive(
-        model: DotnetArtifactModel,
-        latestRelease: DotnetRelease,
-        eelApi: EelApi,
-    ): EelPath? {
+    private fun getDownloadUrl(model: DotnetArtifactModel, latestRelease: DotnetRelease): String? {
         val filesToDownload = when (model.type) {
             DotnetDownloadType.Sdk -> latestRelease.sdk.files
             DotnetDownloadType.Runtime -> latestRelease.runtime.files
             DotnetDownloadType.AspNetRuntime -> latestRelease.aspNetCoreRuntime.files
         }
+
         val fileNameToDownload = buildString {
             append(model.type.id)
             append("-")
@@ -240,62 +242,22 @@ class DownloadDotnetArtifactService(private val project: Project) {
             return null
         }
 
-        val downloadedArchive = downloadReleaseArchive(archiveToDownload, model.rid.fileExtension, eelApi)
-
-        return downloadedArchive
+        return archiveToDownload.url
     }
 
-    private suspend fun downloadReleaseArchive(
-        dotnetReleaseFile: DotnetReleaseFile,
-        extension: String,
-        eelApi: EelApi,
-    ): EelPath {
-        val tempFile = eelApi.fs.createTemporaryFile()
-            .prefix("dotnet-kits")
-            .suffix(extension)
-            .deleteOnExit(true)
-            .eelIt()
-            .getOrThrowFileSystemException()
-
-        LOG.trace { "Temporary file for the release download: ${tempFile.fileName}" }
-
-        val tempFileWriteChannel = tempFile
-            .asNioPath()
-            .outputStream()
-            .asByteWriteChannel()
-
-        client.prepareGet(dotnetReleaseFile.url).execute { httpResponse ->
-            val channel: ByteReadChannel = httpResponse.body()
-            channel.copyAndClose(tempFileWriteChannel)
-        }
-
-        return tempFile
-    }
-
-    private suspend fun unpackReleaseArchive(
-        releaseArchive: EelPath,
+    private suspend fun selectDotnetPathFromArchive(
+        archiveDir: EelPath,
+        fs: EelFileSystemApi,
         releaseVersion: String,
-        type: DotnetDownloadType,
-        targetPath: EelPath,
-        eelApi: EelApi,
-    ) {
-        val tempDir = eelApi.fs.createTemporaryDirectory()
-            .prefix("dotnet-kits-extract")
-            .deleteOnExit(true)
-            .eelIt()
-            .getOrThrowFileSystemException()
-
-        LOG.trace { "Temporary directory for the release extraction: ${tempDir.fileName}" }
-
-        eelApi.archive.extract(releaseArchive, tempDir)
-
+        type: DotnetDownloadType
+    ): EelPath {
         val sourceSubfolder = when (type) {
-            DotnetDownloadType.Sdk -> tempDir.resolve("sdk")
-            DotnetDownloadType.Runtime -> tempDir.resolve("shared").resolve("Microsoft.NETCore.App")
-            DotnetDownloadType.AspNetRuntime -> tempDir.resolve("shared").resolve("Microsoft.AspNetCore.App")
+            DotnetDownloadType.Sdk -> archiveDir.resolve("sdk")
+            DotnetDownloadType.Runtime -> archiveDir.resolve("shared").resolve("Microsoft.NETCore.App")
+            DotnetDownloadType.AspNetRuntime -> archiveDir.resolve("shared").resolve("Microsoft.AspNetCore.App")
         }
 
-        val versionFolders = eelApi.fs.listDirectory(sourceSubfolder).getOrNull()
+        val versionFolders = fs.listDirectory(sourceSubfolder).getOrNull()
         if (versionFolders.isNullOrEmpty()) {
             LOG.warn("No version folder found in extracted archive at $sourceSubfolder")
             error("No version folder found in extracted release archive")
@@ -305,11 +267,6 @@ class DownloadDotnetArtifactService(private val project: Project) {
             error("Unable to find version folder $releaseVersion in extracted release archive")
         }
 
-        val sourcePath = sourceSubfolder.resolve(releaseVersion)
-
-        eelApi.fs
-            .move(sourcePath, targetPath)
-            .replaceEverything()
-            .getOrThrowFileSystemException()
+        return sourceSubfolder.resolve(releaseVersion)
     }
 }

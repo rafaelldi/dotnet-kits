@@ -34,6 +34,18 @@ internal class DownloadArchiveService(private val project: Project) {
 
     private val client = HttpClient(CIO)
 
+    /**
+     * Downloads an archive from a URL, extracts it, selects a specific path, and moves it to the target location.
+     *
+     * Workflow: Download → Extract → Select (via lambda) → Move → Cleanup temp files
+     *
+     * @param downloadFilePrefix Prefix for a temporary download file (e.g., "dotnet-kits")
+     * @param downloadFileExtension Archive extension including dot (e.g., ".zip", ".tar.gz")
+     * @param downloadUrl HTTP/HTTPS URL to download from
+     * @param selectPathFromArchive Lambda to select a specific path from the extracted archive directory
+     * @param targetPath Final destination path (replaces existing content)
+     * @return [Result] containing the [Path] on success, or failure exception.
+     */
     suspend fun downloadArchive(
         downloadFilePrefix: String,
         downloadFileExtension: String,
