@@ -98,13 +98,13 @@ class OmnisharpManagementService(private val project: Project) {
 
     //https://github.com/OmniSharp/omnisharp-roslyn?tab=readme-ov-file#downloading-omnisharp
     private fun getDownloadUrl(version: String, extension: String, platform: EelPlatform): String? = when {
-        platform.isLinux && platform.isX86_64 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-linux-x64$extension"
-        platform.isLinux && platform.isX86 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-linux-x86$extension"
-        platform.isLinux && platform.isArm64 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-linux-arm64$extension"
-        platform.isWindows && platform.isX86_64 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-win-x64$extension"
-        platform.isWindows && platform.isX86 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-win-x86$extension"
-        platform.isWindows && platform.isArm64 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-win-arm64$extension"
-        platform.isMac -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-osx$extension"
+        platform.isLinux && (platform.isX86_64 || platform.isX86) -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-linux-x64-net6.0$extension"
+        platform.isLinux && platform.isArm64 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-linux-arm64-net6.0$extension"
+        platform.isWindows && platform.isX86_64 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-win-x64-net6.0$extension"
+        platform.isWindows && platform.isX86 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-win-x86-net6.0$extension"
+        platform.isWindows && platform.isArm64 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-win-arm64-net6.0$extension"
+        platform.isMac && (platform.isX86_64 || platform.isX86) -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-osx-x64-net6.0$extension"
+        platform.isMac && platform.isArm64 -> "$OMNISHARP_RELEASES/$version/$OMNISHARP-osx-arm64-net6.0$extension"
         else -> null
     }
 }
