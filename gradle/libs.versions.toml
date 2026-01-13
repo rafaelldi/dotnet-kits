@@ -13,7 +13,7 @@ skikoAwtRuntimeAll = "0.9.24"
 # plugins
 changelog = "2.4.0"
 intelliJPlatform = "2.10.5"
-kotlin = "2.2.20"
+kotlin = "2.3.0"
 
 [libraries]
 ktorCio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
